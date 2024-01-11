@@ -132,5 +132,4 @@ class SLI_RECModel(SequentialBaseModel):
                 tf.compat.v1.where(boolean_mask, att_fnc_output, mask_paddings),
                 name="att_weights",
             )
-            output = user_embedding * tf.expand_dims(att_weights, -1)
-            return output
+            return user_embedding * tf.expand_dims(att_weights, -1)

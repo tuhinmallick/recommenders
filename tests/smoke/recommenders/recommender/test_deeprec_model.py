@@ -126,10 +126,6 @@ def test_model_slirec(deeprec_resource_path, deeprec_config_path):
     valid_num_ngs = (
         4  # number of negative instances with a positive instance for validation
     )
-    test_num_ngs = (
-        9  # number of negative instances with a positive instance for testing
-    )
-
     if not os.path.exists(train_file):
         user_vocab = os.path.join(data_path, r"user_vocab.pkl")
         item_vocab = os.path.join(data_path, r"item_vocab.pkl")
@@ -154,6 +150,10 @@ def test_model_slirec(deeprec_resource_path, deeprec_config_path):
         ]
         download_and_extract(reviews_name, reviews_file)
         download_and_extract(meta_name, meta_file)
+        test_num_ngs = (
+            9  # number of negative instances with a positive instance for testing
+        )
+
         data_preprocessing(
             *input_files,
             sample_rate=sample_rate,
@@ -189,10 +189,6 @@ def test_model_sum(deeprec_resource_path, deeprec_config_path):
     valid_num_ngs = (
         4  # number of negative instances with a positive instance for validation
     )
-    test_num_ngs = (
-        9  # number of negative instances with a positive instance for testing
-    )
-
     if not os.path.exists(train_file):
         user_vocab = os.path.join(data_path, r"user_vocab.pkl")
         item_vocab = os.path.join(data_path, r"item_vocab.pkl")
@@ -217,6 +213,10 @@ def test_model_sum(deeprec_resource_path, deeprec_config_path):
         ]
         download_and_extract(reviews_name, reviews_file)
         download_and_extract(meta_name, meta_file)
+        test_num_ngs = (
+            9  # number of negative instances with a positive instance for testing
+        )
+
         data_preprocessing(
             *input_files,
             sample_rate=sample_rate,

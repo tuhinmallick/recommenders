@@ -100,13 +100,12 @@ def sar_settings():
 
 @pytest.fixture(scope="module")
 def header():
-    header = {
+    return {
         "col_user": "UserId",
         "col_item": "MovieId",
         "col_rating": "Rating",
         "col_timestamp": "Timestamp",
     }
-    return header
 
 
 @pytest.fixture(scope="module")
@@ -116,8 +115,7 @@ def pandas_dummy(header):
         header["col_item"]: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         header["col_rating"]: [1.0, 2.0, 3.0, 4.0, 5.0, 1.0, 2.0, 3.0, 4.0, 5.0],
     }
-    df = pd.DataFrame(ratings_dict)
-    return df
+    return pd.DataFrame(ratings_dict)
 
 
 @pytest.fixture(scope="module")
@@ -216,13 +214,14 @@ def criteo_first_row():
 def notebooks():
     folder_notebooks = path_notebooks()
 
-    # Path for the notebooks
-    paths = {
+    return {
         "template": os.path.join(folder_notebooks, "template.ipynb"),
         "sar_single_node": os.path.join(
             folder_notebooks, "00_quick_start", "sar_movielens.ipynb"
         ),
-        "ncf": os.path.join(folder_notebooks, "00_quick_start", "ncf_movielens.ipynb"),
+        "ncf": os.path.join(
+            folder_notebooks, "00_quick_start", "ncf_movielens.ipynb"
+        ),
         "als_pyspark": os.path.join(
             folder_notebooks, "00_quick_start", "als_movielens.ipynb"
         ),
@@ -242,7 +241,9 @@ def notebooks():
             folder_notebooks, "00_quick_start", "wide_deep_movielens.ipynb"
         ),
         "slirec_quickstart": os.path.join(
-            folder_notebooks, "00_quick_start", "sequential_recsys_amazondataset.ipynb"
+            folder_notebooks,
+            "00_quick_start",
+            "sequential_recsys_amazondataset.ipynb",
         ),
         "nrms_quickstart": os.path.join(
             folder_notebooks, "00_quick_start", "nrms_MIND.ipynb"
@@ -269,13 +270,17 @@ def notebooks():
             folder_notebooks, "01_prepare_data", "data_split.ipynb"
         ),
         "wikidata_knowledge_graph": os.path.join(
-            folder_notebooks, "01_prepare_data", "wikidata_knowledge_graph.ipynb"
+            folder_notebooks,
+            "01_prepare_data",
+            "wikidata_knowledge_graph.ipynb",
         ),
         "mind_utils": os.path.join(
             folder_notebooks, "01_prepare_data", "mind_utils.ipynb"
         ),
         "als_deep_dive": os.path.join(
-            folder_notebooks, "02_model_collaborative_filtering", "als_deep_dive.ipynb"
+            folder_notebooks,
+            "02_model_collaborative_filtering",
+            "als_deep_dive.ipynb",
         ),
         "surprise_svd_deep_dive": os.path.join(
             folder_notebooks,
@@ -293,10 +298,14 @@ def notebooks():
             "lightgcn_deep_dive.ipynb",
         ),
         "ncf_deep_dive": os.path.join(
-            folder_notebooks, "02_model_collaborative_filtering", "ncf_deep_dive.ipynb"
+            folder_notebooks,
+            "02_model_collaborative_filtering",
+            "ncf_deep_dive.ipynb",
         ),
         "sar_deep_dive": os.path.join(
-            folder_notebooks, "02_model_collaborative_filtering", "sar_deep_dive.ipynb"
+            folder_notebooks,
+            "02_model_collaborative_filtering",
+            "sar_deep_dive.ipynb",
         ),
         "vowpal_wabbit_deep_dive": os.path.join(
             folder_notebooks,
@@ -324,21 +333,28 @@ def notebooks():
         "lightfm_deep_dive": os.path.join(
             folder_notebooks, "02_model_hybrid", "lightfm_deep_dive.ipynb"
         ),
-        "evaluation": os.path.join(folder_notebooks, "03_evaluate", "evaluation.ipynb"),
+        "evaluation": os.path.join(
+            folder_notebooks, "03_evaluate", "evaluation.ipynb"
+        ),
         "evaluation_diversity": os.path.join(
-            folder_notebooks, "03_evaluate", "als_movielens_diversity_metrics.ipynb"
+            folder_notebooks,
+            "03_evaluate",
+            "als_movielens_diversity_metrics.ipynb",
         ),
         "spark_tuning": os.path.join(
-            folder_notebooks, "04_model_select_and_optimize", "tuning_spark_als.ipynb"
+            folder_notebooks,
+            "04_model_select_and_optimize",
+            "tuning_spark_als.ipynb",
         ),
         "nni_tuning_svd": os.path.join(
-            folder_notebooks, "04_model_select_and_optimize", "nni_surprise_svd.ipynb"
+            folder_notebooks,
+            "04_model_select_and_optimize",
+            "nni_surprise_svd.ipynb",
         ),
         "benchmark_movielens": os.path.join(
             folder_notebooks, "06_benchmarks", "movielens.ipynb"
         ),
     }
-    return paths
 
 
 # NCF FIXTURES
@@ -444,9 +460,9 @@ def dataset_ncf_files_unsorted(data_paths, dataset_ncf_files):
 def dataset_ncf_files_empty(data_paths, dataset_ncf_files):
     train_path, test_path, leave_one_out_test_path = data_paths
     train, test, leave_one_out_test = dataset_ncf_files
-    train = train[0:0]
-    test = test[0:0]
-    leave_one_out_test = leave_one_out_test[0:0]
+    train = train[:0]
+    test = test[:0]
+    leave_one_out_test = leave_one_out_test[:0]
     train.to_csv(train_path, index=False)
     test.to_csv(test_path, index=False)
     leave_one_out_test.to_csv(leave_one_out_test_path, index=False)

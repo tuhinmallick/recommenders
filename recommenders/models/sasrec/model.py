@@ -250,9 +250,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         x_norm = self.layer_normalization(x)
         attn_output = self.mha(queries=x_norm, keys=x)
         attn_output = self.ffn(attn_output)
-        out = attn_output * mask
-
-        return out
+        return attn_output * mask
 
 
 class Encoder(tf.keras.layers.Layer):
@@ -359,8 +357,7 @@ class LayerNormalization(tf.keras.layers.Layer):
         """
         mean, variance = tf.nn.moments(x, [-1], keepdims=True)
         normalized = (x - mean) / ((variance + self.epsilon) ** 0.5)
-        output = self.gamma * normalized + self.beta
-        return output
+        return self.gamma * normalized + self.beta
 
 
 class SASREC(tf.keras.Model):
@@ -608,7 +605,6 @@ class SASREC(tf.keras.Model):
         function to create model inputs from sampled batch data.
         This function is used only during training.
         """
-        inputs = {}
         seq = tf.keras.preprocessing.sequence.pad_sequences(
             seq, padding="pre", truncating="pre", maxlen=self.seq_max_len
         )
@@ -619,7 +615,7 @@ class SASREC(tf.keras.Model):
             neg, padding="pre", truncating="pre", maxlen=self.seq_max_len
         )
 
-        inputs["users"] = np.expand_dims(np.array(u), axis=-1)
+        inputs = {"users": np.expand_dims(np.array(u), axis=-1)}
         inputs["input_seq"] = seq
         inputs["positive"] = pos
         inputs["negative"] = neg
@@ -763,8 +759,7 @@ class SASREC(tf.keras.Model):
                     t = np.random.randint(1, itemnum + 1)
                 item_idx.append(t)
 
-            inputs = {}
-            inputs["user"] = np.expand_dims(np.array([u]), axis=-1)
+            inputs = {"user": np.expand_dims(np.array([u]), axis=-1)}
             inputs["input_seq"] = np.array([seq])
             inputs["candidate"] = np.array([item_idx])
 
@@ -821,8 +816,7 @@ class SASREC(tf.keras.Model):
                     t = np.random.randint(1, itemnum + 1)
                 item_idx.append(t)
 
-            inputs = {}
-            inputs["user"] = np.expand_dims(np.array([u]), axis=-1)
+            inputs = {"user": np.expand_dims(np.array([u]), axis=-1)}
             inputs["input_seq"] = np.array([seq])
             inputs["candidate"] = np.array([item_idx])
 

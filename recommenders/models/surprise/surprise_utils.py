@@ -99,22 +99,19 @@ def compute_ranking_predictions(
     items = data[itemcol].unique()
 
     for user in users:
-        for item in items:
-            preds_lst.append([user, item, algo.predict(user, item).est])
-
+        preds_lst.extend([user, item, algo.predict(user, item).est] for item in items)
     all_predictions = pd.DataFrame(data=preds_lst, columns=[usercol, itemcol, predcol])
 
-    if remove_seen:
-        tempdf = pd.concat(
-            [
-                data[[usercol, itemcol]],
-                pd.DataFrame(
-                    data=np.ones(data.shape[0]), columns=["dummycol"], index=data.index
-                ),
-            ],
-            axis=1,
-        )
-        merged = pd.merge(tempdf, all_predictions, on=[usercol, itemcol], how="outer")
-        return merged[merged["dummycol"].isnull()].drop("dummycol", axis=1)
-    else:
+    if not remove_seen:
         return all_predictions
+    tempdf = pd.concat(
+        [
+            data[[usercol, itemcol]],
+            pd.DataFrame(
+                data=np.ones(data.shape[0]), columns=["dummycol"], index=data.index
+            ),
+        ],
+        axis=1,
+    )
+    merged = pd.merge(tempdf, all_predictions, on=[usercol, itemcol], how="outer")
+    return merged[merged["dummycol"].isnull()].drop("dummycol", axis=1)

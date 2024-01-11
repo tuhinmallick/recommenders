@@ -24,8 +24,7 @@ class PlainScalarProduct(object):
 
     def sim(self, **kwargs):
         """Calculate the similarity score"""
-        sim = self.X.dot(self.Y.T)
-        return sim
+        return self.X.dot(self.Y.T)
 
 
 class Inferer:
@@ -84,7 +83,7 @@ class Inferer:
         sim_score = self.method(a, b).sim(**kwargs)
 
         if self.transformation == "mean":
-            prediction = conv_binary(sim_score, sim_score.mean())
+            return conv_binary(sim_score, sim_score.mean())
         elif self.transformation == "topk":
             masked_sim_score = sim_score.copy()
 
@@ -95,8 +94,6 @@ class Inferer:
 
                 masked_sim_score[i][topKidx] = 1
                 masked_sim_score[i][mask] = 0
-            prediction = masked_sim_score
+            return masked_sim_score
         else:
-            prediction = sim_score
-
-        return prediction
+            return sim_score

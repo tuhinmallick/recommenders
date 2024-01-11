@@ -162,17 +162,13 @@ class LibffmConverter:
         # Check column types.
         types = df.dtypes
         if not all(
-            [
-                x == object or np.issubdtype(x, np.integer) or x == np.float
-                for x in types
-            ]
+            x == object or np.issubdtype(x, np.integer) or x == np.float
+            for x in types
         ):
             raise TypeError("Input columns should be only object and/or numeric types.")
 
         if col_rating not in df.columns:
-            raise TypeError(
-                "Column of {} is not in input dataframe columns".format(col_rating)
-            )
+            raise TypeError(f"Column of {col_rating} is not in input dataframe columns")
 
         self.col_rating = col_rating
         self.field_names = list(df.drop(col_rating, axis=1).columns)
@@ -196,7 +192,7 @@ class LibffmConverter:
                 )
             )
 
-        if not all([x in df.columns for x in self.field_names]):
+        if any(x not in df.columns for x in self.field_names):
             raise ValueError(
                 "Not all columns in the input dataset appear in the fitting dataset"
             )
@@ -398,7 +394,7 @@ def has_same_base_dtype(df_1, df_2, columns=None):
     result = True
     for column in columns:
         if df_1[column].dtype.type.__base__ != df_2[column].dtype.type.__base__:
-            logger.error("Columns {} do not have the same base datatype".format(column))
+            logger.error(f"Columns {column} do not have the same base datatype")
             result = False
 
     return result
@@ -473,14 +469,14 @@ def lru_cache_df(maxsize, typed=False):
         @wraps(user_function)
         def wrapper(*args, **kwargs):
             # convert DataFrames in args and kwargs to PandaHash objects
-            args = tuple([to_pandas_hash(a) for a in args])
+            args = tuple(to_pandas_hash(a) for a in args)
             kwargs = {k: to_pandas_hash(v) for k, v in kwargs.items()}
             return cached_wrapper(*args, **kwargs)
 
         @lru_cache(maxsize=maxsize, typed=typed)
         def cached_wrapper(*args, **kwargs):
             # get DataFrames from PandaHash objects in args and kwargs
-            args = tuple([from_pandas_hash(a) for a in args])
+            args = tuple(from_pandas_hash(a) for a in args)
             kwargs = {k: from_pandas_hash(v) for k, v in kwargs.items()}
             return user_function(*args, **kwargs)
 

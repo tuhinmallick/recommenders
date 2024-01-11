@@ -41,9 +41,7 @@ class DataPtr:
         Returns:
             csr_matrix: Target matrix (based on the data_indices filter)
         """
-        if self.data_indices is None:
-            return self.data
-        return self.data[self.data_indices]
+        return self.data if self.data_indices is None else self.data[self.data_indices]
 
     def get_entity(self, of="row"):
         """Get entity
@@ -218,8 +216,7 @@ class ML_100K(Dataset):
             axis=1,
         )
         features_df.drop(["user_id"], axis=1, inplace=True)
-        user_features = np.nan_to_num(features_df.to_numpy())
-        return user_features
+        return np.nan_to_num(features_df.to_numpy())
 
     def _load_item_features(self, path):
         """Load item features
@@ -266,5 +263,4 @@ class ML_100K(Dataset):
             ],
             axis=1,
         )
-        item_features = np.nan_to_num(features_df.to_numpy())
-        return item_features
+        return np.nan_to_num(features_df.to_numpy())

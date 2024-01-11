@@ -104,10 +104,7 @@ class RLRMCdataset(object):
         rows_train = df_train["userID"].values
         cols_train = df_train["itemID"].values
         entries_omega = df_train["rating"].values
-        if mean_center:
-            train_mean = np.mean(entries_omega)
-        else:
-            train_mean = 0.0
+        train_mean = np.mean(entries_omega) if mean_center else 0.0
         entries_train = entries_omega - train_mean
         self.model_param = {"num_row": d, "num_col": T, "train_mean": train_mean}
 

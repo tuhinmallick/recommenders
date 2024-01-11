@@ -155,8 +155,7 @@ def get_params():
     parser.add_argument("--reg_pu", type=float, dest="reg_pu", default=None)
     parser.add_argument("--reg_qi", type=float, dest="reg_qi", default=None)
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main(params):

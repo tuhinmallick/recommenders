@@ -47,10 +47,7 @@ class ConjugateGradientMS(Solver):
         self._beta_type = beta_type
         self._orth_value = orth_value
 
-        if linesearch is None:
-            self._linesearch = LineSearchAdaptive()
-        else:
-            self._linesearch = linesearch  # LineSearchBackTracking()
+        self._linesearch = LineSearchAdaptive() if linesearch is None else linesearch
         self.linesearch = None
 
     def solve(self, problem, x=None, reuselinesearch=False, compute_stats=None):
@@ -221,10 +218,9 @@ class ConjugateGradientMS(Solver):
                     eta_HZ = -1 / (desc_dir_norm * min(0.01, gradnorm))
                     beta = max(beta, eta_HZ)
                 else:
-                    types = ", ".join(["BetaTypes.%s" % t for t in BetaTypes._fields])
+                    types = ", ".join([f"BetaTypes.{t}" for t in BetaTypes._fields])
                     raise ValueError(
-                        "Unknown beta_type %s. Should be one of %s."
-                        % (self._beta_type, types)
+                        f"Unknown beta_type {self._beta_type}. Should be one of {types}."
                     )
 
                 desc_dir = -Pnewgrad + beta * desc_dir
@@ -242,14 +238,13 @@ class ConjugateGradientMS(Solver):
 
         if self._logverbosity <= 0:
             return x, stats
-        else:
-            self._stop_optlog(
-                x,
-                cost,
-                stop_reason,
-                time0,
-                stepsize=stepsize,
-                gradnorm=gradnorm,
-                iter=iter,
-            )
-            return x, stats, self._optlog
+        self._stop_optlog(
+            x,
+            cost,
+            stop_reason,
+            time0,
+            stepsize=stepsize,
+            gradnorm=gradnorm,
+            iter=iter,
+        )
+        return x, stats, self._optlog

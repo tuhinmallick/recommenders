@@ -44,9 +44,8 @@ def line_graph(
                 )
             plt.subplots_adjust(wspace=0.5)
         plt.subplot(*subplot)
-    else:
-        if plot_size:
-            plt.figure(figsize=plot_size)
+    elif plot_size:
+        plt.figure(figsize=plot_size)
 
     if isinstance(labels, str):
         if isinstance(values[0], (int, float)):
@@ -57,10 +56,7 @@ def line_graph(
     else:
         assert len(values) == len(labels)
         for i, v in enumerate(values):
-            if isinstance(v[0], (int, float)):
-                y, x = v, range(len(v))
-            else:
-                y, x = zip(*v)
+            y, x = (v, range(len(v))) if isinstance(v[0], (int, float)) else zip(*v)
             plt.plot(x, y, label=labels[i], lw=1)
 
     if x_guides:

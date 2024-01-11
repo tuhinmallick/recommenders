@@ -104,5 +104,5 @@ class CaserModel(SequentialBaseModel):
             nums,
             shape,
             activation=tf.nn.relu,
-            name="conv_" + str(shape),
+            name=f"conv_{str(shape)}",
         )

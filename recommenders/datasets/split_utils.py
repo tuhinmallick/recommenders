@@ -33,7 +33,7 @@ def process_split_ratio(ratio):
 
         multi = False
     elif isinstance(ratio, list):
-        if any([x <= 0 for x in ratio]):
+        if any(x <= 0 for x in ratio):
             raise ValueError(
                 "All split ratios in the ratio list should be larger than 0."
             )

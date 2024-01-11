@@ -222,7 +222,7 @@ def load_pandas_df(
     movie_col = header[1]
 
     with download_path(local_cache_path) as path:
-        filepath = os.path.join(path, "ml-{}.zip".format(size))
+        filepath = os.path.join(path, f"ml-{size}.zip")
         datapath, item_datapath = _maybe_download_and_extract(size, filepath)
 
         # Load movie features such as title, genres, and release year
@@ -279,7 +279,7 @@ def load_item_df(
         raise ValueError(f"Size: {size}. " + ERROR_MOVIE_LENS_SIZE)
 
     with download_path(local_cache_path) as path:
-        filepath = os.path.join(path, "ml-{}.zip".format(size))
+        filepath = os.path.join(path, f"ml-{size}.zip")
         _, item_datapath = _maybe_download_and_extract(size, filepath)
         item_df = _load_item_df(
             size, item_datapath, movie_col, title_col, genres_col, year_col
@@ -338,10 +338,7 @@ def _load_item_df(size, item_datapath, movie_col, title_col, genres_col, year_co
 
         def parse_year(t):
             parsed = re.split("[()]", t)
-            if len(parsed) > 2 and parsed[-2].isdecimal():
-                return parsed[-2]
-            else:
-                return None
+            return parsed[-2] if len(parsed) > 2 and parsed[-2].isdecimal() else None
 
         item_df[year_col] = item_df["title_year"].map(parse_year)
         if title_col is None:
@@ -441,7 +438,7 @@ def load_spark_df(
     movie_col = schema[1].name
 
     with download_path(local_cache_path) as path:
-        filepath = os.path.join(path, "ml-{}.zip".format(size))
+        filepath = os.path.join(path, f"ml-{size}.zip")
         datapath, item_datapath = _maybe_download_and_extract(size, filepath)
         spark_datapath = "file:///" + datapath  # shorten form of file://localhost/
 

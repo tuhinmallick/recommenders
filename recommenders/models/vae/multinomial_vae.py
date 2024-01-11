@@ -95,10 +95,7 @@ class Metrics(Callback):
         # set to zero the k elements
         score_c[np.arange(score_c.shape[0])[:, None], top_items] = 0
 
-        # set to zeros all elements other then the k
-        top_scores = score - score_c
-
-        return top_scores
+        return score - score_c
 
     def on_epoch_end(self, batch, logs={}):
         """At the end of each epoch calculate NDCG@k of the validation set.
@@ -253,11 +250,7 @@ class Mult_VAE:
         self.anneal_cap = anneal_cap
         self.annealing = annealing
 
-        if self.annealing:
-            self.beta = K.variable(0.0)
-        else:
-            self.beta = beta
-
+        self.beta = K.variable(0.0) if self.annealing else beta
         # Compute total annealing steps
         self.total_anneal_steps = (
             self.number_of_batches
@@ -340,10 +333,7 @@ class Mult_VAE:
             )
         )
 
-        # obtain negative ELBO
-        neg_ELBO = self.neg_ll + self.beta * kl_loss
-
-        return neg_ELBO
+        return self.neg_ll + self.beta * kl_loss
 
     def _take_sample(self, args):
         """Sample epsilon ∼ N (0,I) and compute z via reparametrization trick."""
@@ -456,14 +446,13 @@ class Mult_VAE:
 
     def get_optimal_beta(self):
         """Returns the value of the optimal beta."""
-        if self.annealing:
-            # find the epoch/index that had the highest NDCG@k value
-            index_max_ndcg = np.argmax(self.val_ndcg)
-
-            # using this index find the value that beta had at this epoch
-            return self.ls_beta[index_max_ndcg]
-        else:
+        if not self.annealing:
             return self.beta
+        # find the epoch/index that had the highest NDCG@k value
+        index_max_ndcg = np.argmax(self.val_ndcg)
+
+        # using this index find the value that beta had at this epoch
+        return self.ls_beta[index_max_ndcg]
 
     def display_metrics(self):
         """Plots:
@@ -521,9 +510,7 @@ class Mult_VAE:
         score_c = score.copy()
         # set to zero the k elements
         score_c[np.arange(score_c.shape[0])[:, None], top_items] = 0
-        # set to zeros all elements other then the k
-        top_scores = score - score_c
-        return top_scores
+        return score - score_c
 
     def ndcg_per_epoch(self):
         """Returns the list of NDCG@k at each epoch."""

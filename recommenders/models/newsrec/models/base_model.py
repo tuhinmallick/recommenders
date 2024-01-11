@@ -158,8 +158,7 @@ class BaseModel:
             list: A list of values, including update operation, total loss, data loss, and merged summary.
         """
         train_input, train_label = self._get_input_label_from_iter(train_batch_data)
-        rslt = self.model.train_on_batch(train_input, train_label)
-        return rslt
+        return self.model.train_on_batch(train_input, train_label)
 
     def eval(self, eval_batch_data):
         """Evaluate the data in feed_dict with current model.
@@ -232,7 +231,7 @@ class BaseModel:
 
             train_info = ",".join(
                 [
-                    str(item[0]) + ":" + str(item[1])
+                    f"{str(item[0])}:{str(item[1])}"
                     for item in [("logloss loss", epoch_loss / step)]
                 ]
             )
@@ -240,7 +239,7 @@ class BaseModel:
             eval_res = self.run_eval(valid_news_file, valid_behaviors_file)
             eval_info = ", ".join(
                 [
-                    str(item[0]) + ":" + str(item[1])
+                    f"{str(item[0])}:{str(item[1])}"
                     for item in sorted(eval_res.items(), key=lambda x: x[0])
                 ]
             )
@@ -248,7 +247,7 @@ class BaseModel:
                 test_res = self.run_eval(test_news_file, test_behaviors_file)
                 test_info = ", ".join(
                     [
-                        str(item[0]) + ":" + str(item[1])
+                        f"{str(item[0])}:{str(item[1])}"
                         for item in sorted(test_res.items(), key=lambda x: x[0])
                     ]
                 )
@@ -297,8 +296,7 @@ class BaseModel:
 
         """
 
-        all_keys = list(set(group_keys))
-        all_keys.sort()
+        all_keys = sorted(set(group_keys))
         group_labels = {k: [] for k in all_keys}
         group_preds = {k: [] for k in all_keys}
 
@@ -332,8 +330,7 @@ class BaseModel:
             _, group_labels, group_preds = self.run_slow_eval(
                 news_filename, behaviors_file
             )
-        res = cal_metric(group_labels, group_preds, self.hparams.metrics)
-        return res
+        return cal_metric(group_labels, group_preds, self.hparams.metrics)
 
     def user(self, batch_user_input):
         user_input = self._get_user_feature_from_iter(batch_user_input)

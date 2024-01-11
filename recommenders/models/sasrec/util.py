@@ -36,10 +36,7 @@ class SASRecDataSet:
             with open(self.filename, "r") as fr:
                 sample = fr.readline()
             ncols = sample.strip().split(self.col_sep)
-            if ncols == 3:
-                self.with_time = True
-            else:
-                self.with_time = False
+            self.with_time = ncols == 3
 
     def split(self, **kwargs):
         self.filename = kwargs.get("filename", self.filename)
@@ -64,15 +61,13 @@ class SASRecDataSet:
 
         for user in self.User:
             nfeedback = len(self.User[user])
+            self.user_valid[user] = []
+            self.user_test[user] = []
             if nfeedback < 3:
                 self.user_train[user] = self.User[user]
-                self.user_valid[user] = []
-                self.user_test[user] = []
             else:
                 self.user_train[user] = self.User[user][:-2]
-                self.user_valid[user] = []
                 self.user_valid[user].append(self.User[user][-2])
-                self.user_test[user] = []
                 self.user_test[user].append(self.User[user][-1])
 
     def data_partition_with_time(self):
@@ -95,13 +90,11 @@ class SASRecDataSet:
             items = [x[0] for x in items]
             self.User[user] = items
             nfeedback = len(self.User[user])
+            self.user_valid[user] = []
+            self.user_test[user] = []
             if nfeedback < 3:
                 self.user_train[user] = self.User[user]
-                self.user_valid[user] = []
-                self.user_test[user] = []
             else:
                 self.user_train[user] = self.User[user][:-2]
-                self.user_valid[user] = []
                 self.user_valid[user].append(self.User[user][-2])
-                self.user_test[user] = []
                 self.user_test[user].append(self.User[user][-1])

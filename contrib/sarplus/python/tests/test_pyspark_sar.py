@@ -39,7 +39,7 @@ def spark(tmp_path_factory, app_name="Sample", url="local[*]", memory="1G"):
     except StopIteration:
         raise Exception("Could not find Sarplus JAR file")
 
-    spark = (
+    return (
         SparkSession.builder.appName(app_name)
         .master(url)
         .config("spark.jars", sarplus_jar_path)
@@ -48,12 +48,12 @@ def spark(tmp_path_factory, app_name="Sample", url="local[*]", memory="1G"):
         .config("spark.default.parallelism", "1")
         .config("spark.sql.crossJoin.enabled", True)
         .config("spark.ui.enabled", False)
-        .config("spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("spark")))
+        .config(
+            "spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("spark"))
+        )
         # .config("spark.eventLog.enabled", True) # only for local debugging, breaks on build server
         .getOrCreate()
     )
-
-    return spark
 
 
 @pytest.fixture(scope="module")
@@ -375,7 +375,7 @@ def test_userpred(
         time_now=time_now,
         threshold=threshold,
         similarity_type=similarity_type,
-        cache_path=str(tmp_path.joinpath("test_userpred-" + test_id)),
+        cache_path=str(tmp_path.joinpath(f"test_userpred-{test_id}")),
     )
 
     df = spark.createDataFrame(demo_usage_data)

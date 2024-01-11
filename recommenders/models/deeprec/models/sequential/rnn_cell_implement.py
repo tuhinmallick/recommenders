@@ -589,16 +589,14 @@ class _Linear(object):
         else:
             self._is_sequence = True
 
-        # Calculate the total size of arguments on dimension 1.
-        total_arg_size = 0
         shapes = [a.get_shape() for a in args]
+        total_arg_size = 0
         for shape in shapes:
             if shape.ndims != 2:
-                raise ValueError("linear is expecting 2D arguments: %s" % shapes)
+                raise ValueError(f"linear is expecting 2D arguments: {shapes}")
             if shape[1] is None:
                 raise ValueError(
-                    "linear expects shape[1] to be provided for shape %s, "
-                    "but saw %s" % (shape, shape[1])
+                    f"linear expects shape[1] to be provided for shape {shape}, but saw {shape[1]}"
                 )
             else:
                 total_arg_size += shape[1]

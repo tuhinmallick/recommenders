@@ -113,8 +113,7 @@ class MINDIterator(BaseIterator):
         self.uindexes = []
 
         with tf.io.gfile.GFile(behaviors_file, "r") as rd:
-            impr_index = 0
-            for line in rd:
+            for impr_index, line in enumerate(rd):
                 uid, time, history, impr = line.strip("\n").split(self.col_spliter)[-4:]
 
                 history = [self.nid2index[i] for i in history.split()]
@@ -131,7 +130,6 @@ class MINDIterator(BaseIterator):
                 self.labels.append(label)
                 self.impr_indexes.append(impr_index)
                 self.uindexes.append(uindex)
-                impr_index += 1
 
     def parser_one_line(self, line):
         """Parse one behavior sample into feature values.
@@ -144,10 +142,10 @@ class MINDIterator(BaseIterator):
             list: Parsed results including label, impression id , user id,
             candidate_title_index, clicked_title_index.
         """
-        if self.npratio > 0:
-            impr_label = self.labels[line]
-            impr = self.imprs[line]
+        impr_label = self.labels[line]
+        impr = self.imprs[line]
 
+        if self.npratio > 0:
             poss = []
             negs = []
 
@@ -159,16 +157,13 @@ class MINDIterator(BaseIterator):
 
             for p in poss:
                 candidate_title_index = []
-                impr_index = []
-                user_index = []
                 label = [1] + [0] * self.npratio
 
                 n = newsample(negs, self.npratio)
                 candidate_title_index = self.news_title_index[[p] + n]
                 click_title_index = self.news_title_index[self.histories[line]]
-                impr_index.append(self.impr_indexes[line])
-                user_index.append(self.uindexes[line])
-
+                impr_index = [self.impr_indexes[line]]
+                user_index = [self.uindexes[line]]
                 yield (
                     label,
                     impr_index,
@@ -178,20 +173,14 @@ class MINDIterator(BaseIterator):
                 )
 
         else:
-            impr_label = self.labels[line]
-            impr = self.imprs[line]
-
             for news, label in zip(impr, impr_label):
                 candidate_title_index = []
-                impr_index = []
-                user_index = []
                 label = [label]
 
                 candidate_title_index.append(self.news_title_index[news])
                 click_title_index = self.news_title_index[self.histories[line]]
-                impr_index.append(self.impr_indexes[line])
-                user_index.append(self.uindexes[line])
-
+                impr_index = [self.impr_indexes[line]]
+                user_index = [self.uindexes[line]]
                 yield (
                     label,
                     impr_index,

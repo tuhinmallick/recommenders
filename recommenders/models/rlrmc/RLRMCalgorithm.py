@@ -55,16 +55,15 @@ class RLRMCalgorithm(object):
         logger.info("Rank: %i, Regularization parameter: %e" % (self.rank, self.C))
         # Initialization # starting point on the manifold
         if self.initialize_flag == "random":  # rndom
-            W0 = None
+            return None
         elif self.initialize_flag == "svd":  # svd
             U0, B0, V0 = svds(entries_train_csr, k=self.rank)
-            W0 = [U0, V0.T, np.diag(B0)]
+            return [U0, V0.T, np.diag(B0)]
         else:  # default option when given incorrect option
             logger.warning(
                 "Initialization flag not recognized. Setting it to random (default)."
             )
-            W0 = None
-        return W0
+            return None
 
     def fit_and_evaluate(self, RLRMCdata, verbosity=0):
         """Main fit and evalute method for RLRMC. In addition to fitting the model, it also computes the per
@@ -233,8 +232,7 @@ class RLRMCalgorithm(object):
             entries_train_csr_indptr,
             residual_global,
         )
-        objective = 0.5 * np.sum((residual_global) ** 2) + 0.5 * self.C * np.sum(B**2)
-        return objective
+        return 0.5 * np.sum((residual_global) ** 2) + 0.5 * self.C * np.sum(B**2)
 
     # computes the gradient of the objective function at a given point
     def _egrad(

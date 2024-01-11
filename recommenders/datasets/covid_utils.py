@@ -186,6 +186,4 @@ def get_public_domain_text(
             "full_text",
         ]
     ]
-    df_full = df_full.reset_index()
-
-    return df_full
+    return df_full.reset_index()

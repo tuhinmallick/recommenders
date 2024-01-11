@@ -24,7 +24,7 @@ def get_number_gpus():
         import torch
 
         return torch.cuda.device_count()
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         pass
     try:
         import numba
@@ -78,16 +78,15 @@ def get_cuda_version():
         import torch
 
         return torch.version.cuda
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         path = ""
         if sys.platform == "win32":
             candidate = (
                 "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v*\\version.txt"
             )
-            path_list = glob.glob(candidate)
-            if path_list:
+            if path_list := glob.glob(candidate):
                 path = path_list[0]
-        elif sys.platform == "linux" or sys.platform == "darwin":
+        elif sys.platform in ["linux", "darwin"]:
             path = "/usr/local/cuda/version.txt"
         else:
             raise ValueError("Not in Windows, Linux or Mac")
@@ -119,13 +118,10 @@ def get_cudnn_version():
                     if "#define CUDNN_MAJOR" in line:
                         version = line.split()[-1]
                     if "#define CUDNN_MINOR" in line:
-                        version += "." + line.split()[-1]
+                        version += f".{line.split()[-1]}"
                     if "#define CUDNN_PATCHLEVEL" in line:
-                        version += "." + line.split()[-1]
-            if version:
-                return version
-            else:
-                return None
+                        version += f".{line.split()[-1]}"
+            return version if version else None
         else:
             return None
 
@@ -133,7 +129,7 @@ def get_cudnn_version():
         import torch
 
         return str(torch.backends.cudnn.version())
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         if sys.platform == "win32":
             candidates = [r"C:\NVIDIA\cuda\include\cudnn.h"]
         elif sys.platform == "linux":

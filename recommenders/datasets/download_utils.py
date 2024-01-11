@@ -84,8 +84,7 @@ def download_path(path=None):
         finally:
             tmp_dir.cleanup()
     else:
-        path = os.path.realpath(path)
-        yield path
+        yield os.path.realpath(path)
 
 
 def unzip_file(zip_src, dst_dir, clean_zip_file=False):

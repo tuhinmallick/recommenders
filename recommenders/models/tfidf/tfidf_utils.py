@@ -102,11 +102,7 @@ class TfidfRecommender:
         df[new_col_name] = df[cols_to_clean].apply(lambda cols: " ".join(cols), axis=1)
 
         # Check if for BERT tokenization
-        if self.tokenization_method in ["bert", "scibert"]:
-            for_BERT = True
-        else:
-            for_BERT = False
-
+        for_BERT = self.tokenization_method in ["bert", "scibert"]
         # Clean the text in the dataframe
         df[new_col_name] = df[new_col_name].map(
             lambda x: self.__clean_text(x, for_BERT)
@@ -264,10 +260,10 @@ class TfidfRecommender:
             k (int): Number of recommendations to return.
         """
         # Initialize new dataframe to hold recommendation output
-        item_id = list()
-        rec_rank = list()
-        rec_score = list()
-        rec_item_id = list()
+        item_id = []
+        rec_rank = []
+        rec_score = []
+        rec_item_id = []
 
         # For each item
         for _item_id in self.recommendations:
@@ -326,10 +322,7 @@ class TfidfRecommender:
             pandas.Series: Single row from dataframe containing recommended item info.
         """
 
-        # Return row
-        rec_info = metadata.iloc[int(np.where(metadata[self.id_col] == rec_id)[0])]
-
-        return rec_info
+        return metadata.iloc[int(np.where(metadata[self.id_col] == rec_id)[0])]
 
     def __make_clickable(self, address):
         """Make URL clickable.

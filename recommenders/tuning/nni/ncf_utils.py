@@ -23,8 +23,6 @@ def compute_test_results(
         dict: Test results.
 
     """
-    test_results = {}
-
     # Rating Metrics
     predictions = [
         [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
@@ -36,9 +34,9 @@ def compute_test_results(
         {"userID": "int64", "itemID": "int64", "prediction": "float64"}
     )
 
-    for metric in rating_metrics:
-        test_results[metric] = eval(metric)(test, predictions)
-
+    test_results = {
+        metric: eval(metric)(test, predictions) for metric in rating_metrics
+    }
     # Ranking Metrics
     users, items, preds = [], [], []
     item = list(train.itemID.unique())

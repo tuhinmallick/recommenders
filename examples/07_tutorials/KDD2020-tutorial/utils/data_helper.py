@@ -116,6 +116,5 @@ def load_paper_author_relation(infile):
                 author2paper_list[words[1]] = []
             author2paper_list[words[1]].append((words[0], order))
             if words[0] not in paper2author_set:
-                paper2author_set[words[0]] = set()
-                paper2author_set[words[0]].add(words[1])
+                paper2author_set[words[0]] = {words[1]}
     return author2paper_list, paper2author_set

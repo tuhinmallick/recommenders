@@ -11,8 +11,8 @@ import time
 
 
 NNI_REST_ENDPOINT = "http://localhost:8080/api/v1/nni"
-NNI_STATUS_URL = NNI_REST_ENDPOINT + "/check-status"
-NNI_TRIAL_JOBS_URL = NNI_REST_ENDPOINT + "/trial-jobs"
+NNI_STATUS_URL = f"{NNI_REST_ENDPOINT}/check-status"
+NNI_TRIAL_JOBS_URL = f"{NNI_REST_ENDPOINT}/trial-jobs"
 WAITING_TIME = 20
 MAX_RETRIES = 10
 
@@ -45,9 +45,7 @@ def check_experiment_status(wait=WAITING_TIME, max_retries=MAX_RETRIES):
             break
         elif nni_status["status"] not in ["RUNNING", "NO_MORE_TRIAL"]:
             raise RuntimeError(
-                "NNI experiment failed to complete with status {} - {}".format(
-                    nni_status["status"], nni_status["errors"][0]
-                )
+                f'NNI experiment failed to complete with status {nni_status["status"]} - {nni_status["errors"][0]}'
             )
         time.sleep(wait)
         i += 1
@@ -85,7 +83,7 @@ def check_metrics_written(wait=WAITING_TIME, max_retries=MAX_RETRIES):
     i = 0
     while i < max_retries:
         all_trials = requests.get(NNI_TRIAL_JOBS_URL).json()
-        if all(["finalMetricData" in trial for trial in all_trials]):
+        if all("finalMetricData" in trial for trial in all_trials):
             break
         time.sleep(wait)
         i += 1
@@ -130,7 +128,7 @@ def get_trials(optimize_mode):
 
 def stop_nni():
     """Stop nni experiment"""
-    proc = subprocess.run([sys.prefix + "/bin/nnictl", "stop"])
+    proc = subprocess.run([f"{sys.prefix}/bin/nnictl", "stop"])
     if proc.returncode != 0:
         raise RuntimeError("'nnictl stop' failed with code %d" % proc.returncode)
     check_stopped()
@@ -145,9 +143,10 @@ def start_nni(config_path, wait=WAITING_TIME, max_retries=MAX_RETRIES):
         max_retries (int): max number of retries
     """
     nni_env = os.environ.copy()
-    nni_env["PATH"] = sys.prefix + "/bin:" + nni_env["PATH"]
+    nni_env["PATH"] = f"{sys.prefix}/bin:" + nni_env["PATH"]
     proc = subprocess.run(
-        [sys.prefix + "/bin/nnictl", "create", "--config", config_path], env=nni_env
+        [f"{sys.prefix}/bin/nnictl", "create", "--config", config_path],
+        env=nni_env,
     )
     if proc.returncode != 0:
         raise RuntimeError("'nnictl create' failed with code %d" % proc.returncode)

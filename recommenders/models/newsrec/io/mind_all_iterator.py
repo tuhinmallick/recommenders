@@ -140,8 +140,7 @@ class MINDAllIterator(BaseIterator):
         self.uindexes = []
 
         with tf.io.gfile.GFile(behaviors_file, "r") as rd:
-            impr_index = 0
-            for line in rd:
+            for impr_index, line in enumerate(rd):
                 uid, time, history, impr = line.strip("\n").split(self.col_spliter)[-4:]
 
                 history = [self.nid2index[i] for i in history.split()]
@@ -158,7 +157,6 @@ class MINDAllIterator(BaseIterator):
                 self.labels.append(label)
                 self.impr_indexes.append(impr_index)
                 self.uindexes.append(uindex)
-                impr_index += 1
 
     def parser_one_line(self, line):
         """Parse one string line into feature values.
@@ -173,10 +171,10 @@ class MINDAllIterator(BaseIterator):
             candidate_vert_index, clicked_vert_index,
             candidate_subvert_index, clicked_subvert_index,
         """
-        if self.npratio > 0:
-            impr_label = self.labels[line]
-            impr = self.imprs[line]
+        impr_label = self.labels[line]
+        impr = self.imprs[line]
 
+        if self.npratio > 0:
             poss = []
             negs = []
 
@@ -188,8 +186,6 @@ class MINDAllIterator(BaseIterator):
 
             for p in poss:
                 candidate_title_index = []
-                impr_index = []
-                user_index = []
                 label = [1] + [0] * self.npratio
 
                 n = newsample(negs, self.npratio)
@@ -201,9 +197,8 @@ class MINDAllIterator(BaseIterator):
                 click_ab_index = self.news_ab_index[self.histories[line]]
                 click_vert_index = self.news_vert_index[self.histories[line]]
                 click_subvert_index = self.news_subvert_index[self.histories[line]]
-                impr_index.append(self.impr_indexes[line])
-                user_index.append(self.uindexes[line])
-
+                impr_index = [self.impr_indexes[line]]
+                user_index = [self.uindexes[line]]
                 yield (
                     label,
                     impr_index,
@@ -219,12 +214,8 @@ class MINDAllIterator(BaseIterator):
                 )
 
         else:
-            impr_label = self.labels[line]
-            impr = self.imprs[line]
-
             for news, label in zip(impr, impr_label):
                 candidate_title_index = []
-                impr_index = []
                 user_index = []
                 label = [label]
 
@@ -239,7 +230,7 @@ class MINDAllIterator(BaseIterator):
                 click_ab_index = self.news_ab_index[self.histories[line]]
                 click_vert_index = self.news_vert_index[self.histories[line]]
                 click_subvert_index = self.news_subvert_index[self.histories[line]]
-                impr_index.append(self.impr_indexes[line])
+                impr_index = [self.impr_indexes[line]]
                 user_index.append(self.uindexes[line])
 
                 yield (
@@ -430,9 +421,7 @@ class MINDAllIterator(BaseIterator):
         click_ab_indexes = []
         click_vert_indexes = []
         click_subvert_indexes = []
-        cnt = 0
-
-        for index in range(len(self.impr_indexes)):
+        for cnt, index in enumerate(range(len(self.impr_indexes)), start=1):
             click_title_indexes.append(self.news_title_index[self.histories[index]])
             click_ab_indexes.append(self.news_ab_index[self.histories[index]])
             click_vert_indexes.append(self.news_vert_index[self.histories[index]])
@@ -440,7 +429,6 @@ class MINDAllIterator(BaseIterator):
             user_indexes.append(self.uindexes[index])
             impr_indexes.append(self.impr_indexes[index])
 
-            cnt += 1
             if cnt >= self.batch_size:
                 yield self._convert_user_data(
                     user_indexes,
@@ -512,16 +500,13 @@ class MINDAllIterator(BaseIterator):
         candidate_ab_indexes = []
         candidate_vert_indexes = []
         candidate_subvert_indexes = []
-        cnt = 0
-
-        for index in range(len(self.news_title_index)):
+        for cnt, index in enumerate(range(len(self.news_title_index)), start=1):
             news_indexes.append(index)
             candidate_title_indexes.append(self.news_title_index[index])
             candidate_ab_indexes.append(self.news_ab_index[index])
             candidate_vert_indexes.append(self.news_vert_index[index])
             candidate_subvert_indexes.append(self.news_subvert_index[index])
 
-            cnt += 1
             if cnt >= self.batch_size:
                 yield self._convert_news_data(
                     news_indexes,

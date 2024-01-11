@@ -142,11 +142,10 @@ class SARPlus:
 
             # replace with time-decayed version
             df = self.spark.sql(query)
-        else:
-            if self.header["col_timestamp"] in df.columns:
-                # we need to de-duplicate items by using the latest item
-                query = self._format(
-                    """
+        elif self.header["col_timestamp"] in df.columns:
+            # we need to de-duplicate items by using the latest item
+            query = self._format(
+                """
                     SELECT `{col_user}`, `{col_item}`, `{col_rating}`
                     FROM (
                           SELECT `{col_user}`,
@@ -160,9 +159,9 @@ class SARPlus:
                         PARTITION BY `{col_user}`,`{col_item}`
                         ORDER BY `{col_timestamp}` DESC)
                 """
-                )
+            )
 
-                df = self.spark.sql(query)
+            df = self.spark.sql(query)
 
         df.createOrReplaceTempView(self._format("{prefix}df_train"))
 
@@ -194,7 +193,7 @@ class SARPlus:
         ).select(F.col("i1").alias("item_id"), F.col("value").alias("frequency"))
 
         # compute the diagonal used later for Jaccard and Lift
-        if self.similarity_type == SIM_LIFT or self.similarity_type == SIM_JACCARD:
+        if self.similarity_type in [SIM_LIFT, SIM_JACCARD]:
             query = self._format(
                 """
                 SELECT i1 AS i, value AS margin
@@ -236,7 +235,7 @@ class SARPlus:
 
         # store upper triangular
         log.info(
-            "sarplus.fit 2/2: compute similarity metric %s..." % self.similarity_type
+            f"sarplus.fit 2/2: compute similarity metric {self.similarity_type}..."
         )
         self.item_similarity.write.mode("overwrite").saveAsTable(
             self._format("{prefix}item_similarity_upper")
@@ -553,7 +552,7 @@ class SARPlus:
 
         user_affinity = test_affinity.where(F.col("user_id") == user).alias("user")
 
-        df_similar_users = (
+        return (
             test_affinity.join(
                 user_affinity,
                 test_affinity["item_id"] == user_affinity["item_id"],
@@ -573,8 +572,6 @@ class SARPlus:
             .orderBy("similarity", ascending=False)
             .limit(k)
         )
-
-        return df_similar_users
 
     def get_popularity_based_topk(self, top_k=10, items=True):
         """Get top K most frequently occurring items across all users.

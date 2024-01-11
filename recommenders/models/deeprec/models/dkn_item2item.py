@@ -18,8 +18,7 @@ class DKNItem2Item(DKN):
 
     def _compute_data_loss(self):
         logits = self.pred
-        data_loss = -1 * tf.reduce_sum(input_tensor=tf.math.log(logits[:, 0] + 1e-10))
-        return data_loss
+        return -1 * tf.reduce_sum(input_tensor=tf.math.log(logits[:, 0] + 1e-10))
 
     def _build_dkn(self):
         """The main function to create DKN's logic.
@@ -125,5 +124,4 @@ class DKNItem2Item(DKN):
                 group_preds.extend(step_pred)
                 group_labels.extend(step_labels)
 
-        res = cal_metric(group_labels, group_preds, self.hparams.pairwise_metrics)
-        return res
+        return cal_metric(group_labels, group_preds, self.hparams.pairwise_metrics)

@@ -26,8 +26,7 @@ def get_review_data(reviews_file):
     """
     reviews_name = reviews_file.split("/")[-1]  # *.json (for url)
     download_and_extract(reviews_name, reviews_file)
-    reviews_output = _reviews_preprocessing(reviews_file)
-    return reviews_output
+    return _reviews_preprocessing(reviews_file)
 
 
 def data_preprocessing(
@@ -109,26 +108,13 @@ def _create_vocab(train_file, user_vocab, item_vocab, cate_vocab):
     sorted_item_dict = sorted(item_dict.items(), key=lambda x: x[1], reverse=True)
     sorted_cat_dict = sorted(cat_dict.items(), key=lambda x: x[1], reverse=True)
 
-    uid_voc = {}
-    index = 0
-    for key, value in sorted_user_dict:
-        uid_voc[key] = index
-        index += 1
-
-    mid_voc = {}
-    mid_voc["default_mid"] = 0
-    index = 1
-    for key, value in sorted_item_dict:
+    uid_voc = {key: index for index, (key, value) in enumerate(sorted_user_dict)}
+    mid_voc = {"default_mid": 0}
+    for index, (key, value) in enumerate(sorted_item_dict, start=1):
         mid_voc[key] = index
-        index += 1
-
-    cat_voc = {}
-    cat_voc["default_cat"] = 0
-    index = 1
-    for key, value in sorted_cat_dict:
+    cat_voc = {"default_cat": 0}
+    for index, (key, value) in enumerate(sorted_cat_dict, start=1):
         cat_voc[key] = index
-        index += 1
-
     cPickle.dump(uid_voc, open(user_vocab, "wb"))
     cPickle.dump(mid_voc, open(item_vocab, "wb"))
     cPickle.dump(cat_voc, open(cate_vocab, "wb"))
@@ -210,32 +196,26 @@ def _data_generating(input_file, train_file, valid_file, test_file, min_sequence
         date_time = line_split[4]
         category = line_split[5]
 
-        if tfile == "train":
+        if tfile == "test":
+            fo = f_test
+        elif tfile == "train":
             fo = f_train
         elif tfile == "valid":
             fo = f_valid
-        elif tfile == "test":
-            fo = f_test
         if user_id != last_user_id:
             movie_id_list = []
             cate_list = []
             dt_list = []
         else:
             history_clk_num = len(movie_id_list)
-            cat_str = ""
-            mid_str = ""
-            dt_str = ""
-            for c1 in cate_list:
-                cat_str += c1 + ","
-            for mid in movie_id_list:
-                mid_str += mid + ","
-            for dt_time in dt_list:
-                dt_str += dt_time + ","
-            if len(cat_str) > 0:
+            cat_str = "".join(c1 + "," for c1 in cate_list)
+            mid_str = "".join(mid + "," for mid in movie_id_list)
+            dt_str = "".join(dt_time + "," for dt_time in dt_list)
+            if cat_str != "":
                 cat_str = cat_str[:-1]
-            if len(mid_str) > 0:
+            if mid_str != "":
                 mid_str = mid_str[:-1]
-            if len(dt_str) > 0:
+            if dt_str != "":
                 dt_str = dt_str[:-1]
             if history_clk_num >= min_sequence:
                 fo.write(
@@ -290,31 +270,30 @@ def _data_generating_no_history_expanding(
         date_time = line_split[4]
         category = line_split[5]
 
-        if last_tfile == "train":
+        if last_tfile == "test":
+            fo = f_test
+        elif last_tfile == "train":
             fo = f_train
         elif last_tfile == "valid":
             fo = f_valid
-        elif last_tfile == "test":
-            fo = f_test
         if user_id != last_user_id or tfile == "valid" or tfile == "test":
             if last_user_id is not None:
                 history_clk_num = len(
                     movie_id_list  # noqa: F821 undefined name 'movie_id_list'
                 )
-                cat_str = ""
-                mid_str = ""
                 dt_str = ""
-                for c1 in cate_list[:-1]:  # noqa: F821 undefined name 'cate_list'
-                    cat_str += c1 + ","
-                for mid in movie_id_list[  # noqa: F821 undefined name 'movie_id_list'
-                    :-1
-                ]:
-                    mid_str += mid + ","
+                cat_str = "".join(c1 + "," for c1 in cate_list[:-1])
+                mid_str = "".join(
+                    mid + ","
+                    for mid in movie_id_list[  # noqa: F821 undefined name 'movie_id_list'
+                        :-1
+                    ]
+                )
                 for dt_time in dt_list[:-1]:  # noqa: F821 undefined name 'dt_list'
                     dt_str += dt_time + ","
-                if len(cat_str) > 0:
+                if cat_str != "":
                     cat_str = cat_str[:-1]
-                if len(mid_str) > 0:
+                if mid_str != "":
                     mid_str = mid_str[:-1]
                 if len(dt_str) > 0:
                     dt_str = dt_str[:-1]
@@ -347,9 +326,9 @@ def _data_generating_no_history_expanding(
         last_datetime = date_time
         last_tfile = tfile
         if label:
-            movie_id_list.append(movie_id)
-            cate_list.append(category)
-            dt_list.append(date_time)
+            movie_id_list.append(last_movie_id)
+            cate_list.append(last_category)
+            dt_list.append(last_datetime)
 
 
 def _create_item2cate(instance_file):
@@ -385,12 +364,11 @@ def _get_sampled_data(instance_file, sample_rate):
 def _meta_preprocessing(meta_readfile):
     logger.info("start meta preprocessing...")
     meta_writefile = meta_readfile + "_output"
-    meta_r = open(meta_readfile, "r")
-    meta_w = open(meta_writefile, "w")
-    for line in meta_r:
-        line_new = eval(line)
-        meta_w.write(line_new["asin"] + "\t" + line_new["categories"][0][-1] + "\n")
-    meta_r.close()
+    with open(meta_readfile, "r") as meta_r:
+        meta_w = open(meta_writefile, "w")
+        for line in meta_r:
+            line_new = eval(line)
+            meta_w.write(line_new["asin"] + "\t" + line_new["categories"][0][-1] + "\n")
     meta_w.close()
     return meta_writefile
 
@@ -398,19 +376,18 @@ def _meta_preprocessing(meta_readfile):
 def _reviews_preprocessing(reviews_readfile):
     logger.info("start reviews preprocessing...")
     reviews_writefile = reviews_readfile + "_output"
-    reviews_r = open(reviews_readfile, "r")
-    reviews_w = open(reviews_writefile, "w")
-    for line in reviews_r:
-        line_new = eval(line.strip())
-        reviews_w.write(
-            str(line_new["reviewerID"])
-            + "\t"
-            + str(line_new["asin"])
-            + "\t"
-            + str(line_new["unixReviewTime"])
-            + "\n"
-        )
-    reviews_r.close()
+    with open(reviews_readfile, "r") as reviews_r:
+        reviews_w = open(reviews_writefile, "w")
+        for line in reviews_r:
+            line_new = eval(line.strip())
+            reviews_w.write(
+                str(line_new["reviewerID"])
+                + "\t"
+                + str(line_new["asin"])
+                + "\t"
+                + str(line_new["unixReviewTime"])
+                + "\n"
+            )
     reviews_w.close()
     return reviews_writefile
 
@@ -420,37 +397,36 @@ def _create_instance(reviews_file, meta_file):
     dirs, _ = os.path.split(reviews_file)
     output_file = os.path.join(dirs, "instance_output")
 
-    f_reviews = open(reviews_file, "r")
-    user_dict = {}
-    item_list = []
-    for line in f_reviews:
-        line = line.strip()
-        reviews_things = line.split("\t")
-        if reviews_things[0] not in user_dict:
-            user_dict[reviews_things[0]] = []
-        user_dict[reviews_things[0]].append((line, float(reviews_things[-1])))
-        item_list.append(reviews_things[1])
+    with open(reviews_file, "r") as f_reviews:
+        user_dict = {}
+        item_list = []
+        for line in f_reviews:
+            line = line.strip()
+            reviews_things = line.split("\t")
+            if reviews_things[0] not in user_dict:
+                user_dict[reviews_things[0]] = []
+            user_dict[reviews_things[0]].append((line, float(reviews_things[-1])))
+            item_list.append(reviews_things[1])
 
-    f_meta = open(meta_file, "r")
-    meta_dict = {}
-    for line in f_meta:
-        line = line.strip()
-        meta_things = line.split("\t")
-        if meta_things[0] not in meta_dict:
-            meta_dict[meta_things[0]] = meta_things[1]
+        f_meta = open(meta_file, "r")
+        meta_dict = {}
+        for line in f_meta:
+            line = line.strip()
+            meta_things = line.split("\t")
+            if meta_things[0] not in meta_dict:
+                meta_dict[meta_things[0]] = meta_things[1]
 
-    f_output = open(output_file, "w")
-    for user_behavior in user_dict:
-        sorted_user_behavior = sorted(user_dict[user_behavior], key=lambda x: x[1])
-        for line, _ in sorted_user_behavior:
-            user_things = line.split("\t")
-            asin = user_things[1]
-            if asin in meta_dict:
-                f_output.write("1" + "\t" + line + "\t" + meta_dict[asin] + "\n")
-            else:
-                f_output.write("1" + "\t" + line + "\t" + "default_cat" + "\n")
+        f_output = open(output_file, "w")
+        for user_behavior in user_dict:
+            sorted_user_behavior = sorted(user_dict[user_behavior], key=lambda x: x[1])
+            for line, _ in sorted_user_behavior:
+                user_things = line.split("\t")
+                asin = user_things[1]
+                if asin in meta_dict:
+                    f_output.write("1" + "\t" + line + "\t" + meta_dict[asin] + "\n")
+                else:
+                    f_output.write("1" + "\t" + line + "\t" + "default_cat" + "\n")
 
-    f_reviews.close()
     f_meta.close()
     f_output.close()
     return output_file
@@ -476,22 +452,15 @@ def _data_processing(input_file):
     for line in f_input:
         line = line.strip()
         user = line.split("\t")[1]
-        if user == last_user:
-            if i < user_count[user] - 2:
-                f_output.write("train" + "\t" + line + "\n")
-            elif i < user_count[user] - 1:
-                f_output.write("valid" + "\t" + line + "\n")
-            else:
-                f_output.write("test" + "\t" + line + "\n")
-        else:
+        if user != last_user:
             last_user = user
             i = 0
-            if i < user_count[user] - 2:
-                f_output.write("train" + "\t" + line + "\n")
-            elif i < user_count[user] - 1:
-                f_output.write("valid" + "\t" + line + "\n")
-            else:
-                f_output.write("test" + "\t" + line + "\n")
+        if i < user_count[user] - 2:
+            f_output.write("train" + "\t" + line + "\n")
+        elif i < user_count[user] - 1:
+            f_output.write("valid" + "\t" + line + "\n")
+        else:
+            f_output.write("test" + "\t" + line + "\n")
         i += 1
     return output_file
 

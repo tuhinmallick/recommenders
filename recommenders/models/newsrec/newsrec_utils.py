@@ -274,10 +274,7 @@ def word_tokenize(sent):
         list: word list
     """
     pat = re.compile(r"[\w]+|[.,!?;|]")
-    if isinstance(sent, str):
-        return pat.findall(sent.lower())
-    else:
-        return []
+    return pat.findall(sent.lower()) if isinstance(sent, str) else []
 
 
 def newsample(news, ratio):

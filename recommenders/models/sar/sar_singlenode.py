@@ -316,7 +316,7 @@ class SARSingleNode:
             logger.info("Using mutual information similarity")
             self.item_similarity = mutual_information(item_cooccurrence)
         else:
-            raise ValueError("Unknown similarity type: {}".format(self.similarity_type))
+            raise ValueError(f"Unknown similarity type: {self.similarity_type}")
 
         # free up some space
         del item_cooccurrence
@@ -590,11 +590,10 @@ class SARSingleNode:
             item_ids[nans] = self.n_items
             item_ids = item_ids.astype("int64")
 
-        df = pd.DataFrame(
+        return pd.DataFrame(
             {
                 self.col_user: test[self.col_user].values,
                 self.col_item: test[self.col_item].values,
                 self.col_prediction: test_scores[user_ids, item_ids],
             }
         )
-        return df

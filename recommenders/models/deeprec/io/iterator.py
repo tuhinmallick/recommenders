@@ -97,11 +97,8 @@ class FFMTextIterator(BaseIterator):
             list: Parsed results, including `label`, `features` and `impression_id`.
 
         """
-        impression_id = 0
         words = line.strip().split(self.ID_spliter)
-        if len(words) == 2:
-            impression_id = words[1].strip()
-
+        impression_id = words[1].strip() if len(words) == 2 else 0
         cols = words[0].strip().split(self.col_spliter)
 
         label = float(cols[0])
@@ -191,8 +188,7 @@ class FFMTextIterator(BaseIterator):
                 )
                 dnn_feat_values.append(features[i][j][1])
                 dnn_feat_weights.append(features[i][j][2])
-                if dnn_feat_shape[1] < dnn_feat_dic[features[i][j][0]]:
-                    dnn_feat_shape[1] = dnn_feat_dic[features[i][j][0]]
+                dnn_feat_shape[1] = max(dnn_feat_shape[1], dnn_feat_dic[features[i][j][0]])
         dnn_feat_shape[1] += 1
 
         sorted_index = sorted(
@@ -200,8 +196,7 @@ class FFMTextIterator(BaseIterator):
             key=lambda k: (dnn_feat_indices[k][0], dnn_feat_indices[k][1]),
         )
 
-        res = {}
-        res["fm_feat_indices"] = np.asarray(fm_feat_indices, dtype=np.int64)
+        res = {"fm_feat_indices": np.asarray(fm_feat_indices, dtype=np.int64)}
         res["fm_feat_values"] = np.asarray(fm_feat_values, dtype=np.float32)
         res["fm_feat_shape"] = np.asarray(fm_feat_shape, dtype=np.int64)
         res["labels"] = np.asarray([[label] for label in labels], dtype=np.float32)
@@ -228,7 +223,7 @@ class FFMTextIterator(BaseIterator):
             dict: A dictionary that maps graph elements to numpy arrays.
 
         """
-        feed_dict = {
+        return {
             self.labels: data_dict["labels"],
             self.fm_feat_indices: data_dict["fm_feat_indices"],
             self.fm_feat_values: data_dict["fm_feat_values"],
@@ -238,4 +233,3 @@ class FFMTextIterator(BaseIterator):
             self.dnn_feat_weights: data_dict["dnn_feat_weights"],
             self.dnn_feat_shape: data_dict["dnn_feat_shape"],
         }
-        return feed_dict

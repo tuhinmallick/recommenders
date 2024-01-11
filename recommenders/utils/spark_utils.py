@@ -40,34 +40,32 @@ def start_or_get_spark(
         object: Spark context.
     """
 
-    submit_args = ""
-    if packages is not None:
-        submit_args = "--packages {} ".format(",".join(packages))
+    submit_args = "" if packages is None else f'--packages {",".join(packages)} '
     if jars is not None:
-        submit_args += "--jars {} ".format(",".join(jars))
+        submit_args += f'--jars {",".join(jars)} '
     if repositories is not None:
-        submit_args += "--repositories {}".format(",".join(repositories))
+        submit_args += f'--repositories {",".join(repositories)}'
     if submit_args:
-        os.environ["PYSPARK_SUBMIT_ARGS"] = "{} pyspark-shell".format(submit_args)
+        os.environ["PYSPARK_SUBMIT_ARGS"] = f"{submit_args} pyspark-shell"
 
     spark_opts = [
-        'SparkSession.builder.appName("{}")'.format(app_name),
-        'master("{}")'.format(url),
+        f'SparkSession.builder.appName("{app_name}")',
+        f'master("{url}")',
     ]
 
     if config is not None:
         for key, raw_value in config.items():
-            value = (
-                '"{}"'.format(raw_value) if isinstance(raw_value, str) else raw_value
-            )
+            value = f'"{raw_value}"' if isinstance(raw_value, str) else raw_value
             spark_opts.append('config("{key}", {value})'.format(key=key, value=value))
 
     if config is None or "spark.driver.memory" not in config:
-        spark_opts.append('config("spark.driver.memory", "{}")'.format(memory))
+        spark_opts.append(f'config("spark.driver.memory", "{memory}")')
 
-    # Set larger stack size
-    spark_opts.append('config("spark.executor.extraJavaOptions", "-Xss4m")')
-    spark_opts.append('config("spark.driver.extraJavaOptions", "-Xss4m")')
-
-    spark_opts.append("getOrCreate()")
+    spark_opts.extend(
+        (
+            'config("spark.executor.extraJavaOptions", "-Xss4m")',
+            'config("spark.driver.extraJavaOptions", "-Xss4m")',
+            "getOrCreate()",
+        )
+    )
     return eval(".".join(spark_opts))

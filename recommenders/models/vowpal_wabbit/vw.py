@@ -82,7 +82,7 @@ class VW:
             cmd.append(f"-{k}" if len(k) == 1 else f"--{k}")
             if v is not True:
                 # don't add an argument for parameters with value == True
-                cmd.append("{}".format(v))
+                cmd.append(f"{v}")
 
         return cmd
 

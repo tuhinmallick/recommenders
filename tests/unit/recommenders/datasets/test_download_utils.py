@@ -53,7 +53,7 @@ def test_maybe_download_maybe(caplog, files_fixtures):
     downloaded_filepath = maybe_download(file_url, "license.txt")
     assert os.path.exists(downloaded_filepath)
     maybe_download(file_url, "license.txt")
-    assert "File ." + os.path.sep + "license.txt already downloaded" in caplog.text
+    assert f"File .{os.path.sep}license.txt already downloaded" in caplog.text
 
 
 def test_maybe_download_retry(caplog):

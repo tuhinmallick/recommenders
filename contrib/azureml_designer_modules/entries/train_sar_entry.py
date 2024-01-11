@@ -63,7 +63,7 @@ if __name__ == "__main__":
     model.fit(input_df)
 
     train_time = time.time() - start_time
-    print("Took {} seconds for training.".format(train_time))
+    print(f"Took {train_time} seconds for training.")
 
     save_model_to_directory(
         save_to=args.output_model, model_dumper=joblib_dumper(data=model)

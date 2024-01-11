@@ -35,13 +35,10 @@ def python_random_split(data, ratio=0.75, seed=42):
     """
     multi_split, ratio = process_split_ratio(ratio)
 
-    if multi_split:
-        splits = split_pandas_data_with_ratios(data, ratio, shuffle=True, seed=seed)
-        splits_new = [x.drop("split_index", axis=1) for x in splits]
-
-        return splits_new
-    else:
+    if not multi_split:
         return sk_split(data, test_size=None, train_size=ratio, random_state=seed)
+    splits = split_pandas_data_with_ratios(data, ratio, shuffle=True, seed=seed)
+    return [x.drop("split_index", axis=1) for x in splits]
 
 
 def _do_stratification(
@@ -56,7 +53,7 @@ def _do_stratification(
     col_timestamp=DEFAULT_TIMESTAMP_COL,
 ):
     # A few preliminary checks.
-    if not (filter_by == "user" or filter_by == "item"):
+    if filter_by not in ["user", "item"]:
         raise ValueError("filter_by should be either 'user' or 'item'.")
 
     if min_rating < 1:
