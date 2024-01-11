@@ -74,13 +74,11 @@ class NextItNetModel(SequentialBaseModel):
                 )
 
             self.dilate_input = dilate_input
-            model_output = tf.cond(
+            return tf.cond(
                 pred=is_training,
                 true_fn=self._training_output,
                 false_fn=self._normal_output,
             )
-
-            return model_output
 
     def _training_output(self):
         model_output = tf.repeat(
@@ -102,10 +100,7 @@ class NextItNetModel(SequentialBaseModel):
 
     def _normal_output(self):
         model_output = self.dilate_input[:, -1, :]
-        model_output = tf.concat(
-            [model_output, self.target_item_embedding[:, -1, :]], -1
-        )
-        return model_output
+        return tf.concat([model_output, self.target_item_embedding[:, -1, :]], -1)
 
     def _nextitnet_residual_block_one(
         self,
@@ -132,9 +127,7 @@ class NextItNetModel(SequentialBaseModel):
             object: The output of residual layers.
         """
         resblock_type = "decoder"
-        resblock_name = "nextitnet_residual_block_one_{}_layer_{}_{}".format(
-            resblock_type, layer_id, dilation
-        )
+        resblock_name = f"nextitnet_residual_block_one_{resblock_type}_layer_{layer_id}_{dilation}"
         with tf.compat.v1.variable_scope(resblock_name):
             input_ln = self._layer_norm(input_, name="layer_norm1", trainable=train)
             relu1 = tf.nn.relu(input_ln)

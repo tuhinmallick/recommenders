@@ -78,7 +78,7 @@ def test_clean_dataframe(model, df):
         df, ["abstract", "full_text"], new_col_name=CLEAN_COL
     )
 
-    isalphanumeric = list()
+    isalphanumeric = []
     for idx, _ in df_clean.iterrows():
         s1 = str(df_clean[CLEAN_COL][idx])
         isalphanumeric.append(s1.replace(" ", "").isalnum())

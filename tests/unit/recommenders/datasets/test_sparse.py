@@ -56,9 +56,10 @@ def python_dataset(test_specs):
     for i in range(1, test_specs["number_of_users"] + 1):
         userids.extend([i] * test_specs["number_of_items"])
 
-    itemids = [i for i in range(1, test_specs["number_of_items"] + 1)] * test_specs[
-        "number_of_users"
-    ]
+    itemids = (
+        list(range(1, test_specs["number_of_items"] + 1))
+        * test_specs["number_of_users"]
+    )
     ratings = np.reshape(X, -1)
 
     # create dataframe

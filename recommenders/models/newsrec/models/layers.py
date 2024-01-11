@@ -188,17 +188,16 @@ class SelfAttention(layers.Layer):
 
         if seq_len is None:
             return inputs
-        else:
-            mask = K.one_hot(indices=seq_len[:, 0], num_classes=K.shape(inputs)[1])
-            mask = 1 - K.cumsum(mask, axis=1)
+        mask = K.one_hot(indices=seq_len[:, 0], num_classes=K.shape(inputs)[1])
+        mask = 1 - K.cumsum(mask, axis=1)
 
-            for _ in range(len(inputs.shape) - 2):
-                mask = K.expand_dims(mask, 2)
+        for _ in range(len(inputs.shape) - 2):
+            mask = K.expand_dims(mask, 2)
 
-            if mode == "mul":
-                return inputs * mask
-            elif mode == "add":
-                return inputs - (1 - mask) * 1e12
+        if mode == "add":
+            return inputs - (1 - mask) * 1e12
+        elif mode == "mul":
+            return inputs * mask
 
     def call(self, QKVs):
         """Core logic of multi-head self attention.
@@ -298,8 +297,7 @@ def PersonalizedAttentivePooling(dim1, dim2, dim3, seed=0):
     user_att2 = layers.Activation("softmax")(user_att2)
     user_vec = layers.Dot((1, 1))([user_vecs, user_att2])
 
-    model = keras.Model([vecs_input, query_input], user_vec)
-    return model
+    return keras.Model([vecs_input, query_input], user_vec)
 
 
 class ComputeMasking(layers.Layer):

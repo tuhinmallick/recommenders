@@ -74,10 +74,10 @@ def setup_workspace(
     Returns:
         ws: workspace reference
     """
-    logger.debug("setup: workspace_name is {}".format(workspace_name))
-    logger.debug("setup: resource_group is {}".format(resource_group))
-    logger.debug("setup: subid is {}".format(subscription_id))
-    logger.debug("setup: location is {}".format(location))
+    logger.debug(f"setup: workspace_name is {workspace_name}")
+    logger.debug(f"setup: resource_group is {resource_group}")
+    logger.debug(f"setup: subid is {subscription_id}")
+    logger.debug(f"setup: location is {location}")
 
     try:
         # use existing workspace if there is one
@@ -125,7 +125,7 @@ def setup_persistent_compute_target(workspace, cluster_name, vm_size, max_nodes)
     # setting vmsize and num nodes creates a persistent AzureML
     # compute resource
 
-    logger.debug("setup: cluster_name {}".format(cluster_name))
+    logger.debug(f"setup: cluster_name {cluster_name}")
     # https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-set-up-training-targets
 
     try:
@@ -198,13 +198,13 @@ def create_run_config(
     if add_gpu_dependencies and add_spark_dependencies:
         conda_dep.add_channel("conda-forge")
         conda_dep.add_conda_package(conda_pkg_jdk)
-        reco_extras = reco_extras + ",spark,gpu"
+        reco_extras += ",spark,gpu"
     elif add_gpu_dependencies:
-        reco_extras = reco_extras + ",gpu"
+        reco_extras += ",gpu"
     elif add_spark_dependencies:
         conda_dep.add_channel("conda-forge")
         conda_dep.add_conda_package(conda_pkg_jdk)
-        reco_extras = reco_extras + ",spark"
+        reco_extras += ",spark"
 
     conda_dep.add_pip_package(
         f"recommenders[{reco_extras}]@git+https://github.com/recommenders-team/recommenders.git@{commit_sha}"
@@ -227,9 +227,8 @@ def create_experiment(workspace, experiment_name):
         exp - AzureML experiment
     """
 
-    logger.debug("create: experiment_name {}".format(experiment_name))
-    exp = Experiment(workspace=workspace, name=experiment_name)
-    return exp
+    logger.debug(f"create: experiment_name {experiment_name}")
+    return Experiment(workspace=workspace, name=experiment_name)
 
 
 def submit_experiment_to_azureml(
@@ -269,7 +268,7 @@ def submit_experiment_to_azureml(
     # test logs can also be found on azure
     # go to azure portal to see log in azure ws and look for experiment name
     # and look for individual run
-    logger.debug("files {}".format(run.get_file_names))
+    logger.debug(f"files {run.get_file_names}")
 
     return run
 
@@ -412,9 +411,7 @@ def create_arg_parser():
         action="store_true",
         help="Turn off warnings",
     )
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
@@ -458,7 +455,7 @@ if __name__ == "__main__":
         commit_sha=args.sha,
     )
 
-    logger.info("exp: In Azure, look for experiment named {}".format(args.expname))
+    logger.info(f"exp: In Azure, look for experiment named {args.expname}")
 
     # create new or use existing experiment
     experiment = Experiment(workspace=workspace, name=args.expname)

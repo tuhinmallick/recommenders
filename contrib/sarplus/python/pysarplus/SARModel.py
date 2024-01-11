@@ -18,9 +18,9 @@ class SARModel:
             return
 
         # find the .sar.related & .sar.offsets files
-        sar_files = list(Path(path).glob("*" + SARModel.__extension))
+        sar_files = list(Path(path).glob(f"*{SARModel.__extension}"))
         sar_files.sort(key=os.path.getmtime, reverse=True)
-        if len(sar_files) < 1:
+        if not sar_files:
             raise ValueError(
                 f"Directory '{path}' must contain at least 1 file ending in '{SARModel.__extension}'"
             )

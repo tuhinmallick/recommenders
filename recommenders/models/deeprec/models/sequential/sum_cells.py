@@ -51,10 +51,7 @@ class SUMCell(LayerRNNCell):
         self._slots = slots - 1  # the last channel is reserved for the highway slot
         self._num_units = num_units
         self._real_units = (self._num_units - input_size) // slots
-        if activation:
-            self._activation = activations.get(activation)
-        else:
-            self._activation = math_ops.tanh
+        self._activation = activations.get(activation) if activation else math_ops.tanh
         self._kernel_initializer = initializers.get(kernel_initializer)
         self._bias_initializer = initializers.get(bias_initializer)
 
@@ -139,8 +136,7 @@ class SUMCell(LayerRNNCell):
         """
         if inputs_shape[-1] is None:
             raise ValueError(
-                "Expected inputs.shape[-1] to be known, saw shape: %s"
-                % str(inputs_shape)
+                f"Expected inputs.shape[-1] to be known, saw shape: {str(inputs_shape)}"
             )
         _check_supported_dtypes(self.dtype)
         d = inputs_shape[-1]  # noqa: F841
@@ -249,8 +245,7 @@ class SUMV2Cell(SUMCell):
         """
         if inputs_shape[-1] is None:
             raise ValueError(
-                "Expected inputs.shape[-1] to be known, saw shape: %s"
-                % str(inputs_shape)
+                f"Expected inputs.shape[-1] to be known, saw shape: {str(inputs_shape)}"
             )
         _check_supported_dtypes(self.dtype)
         d = inputs_shape[-1]
@@ -377,5 +372,5 @@ def _check_supported_dtypes(dtype):
     dtype = dtypes.as_dtype(dtype)
     if not (dtype.is_floating or dtype.is_complex):
         raise ValueError(
-            "RNN cell only supports floating point inputs, " "but saw dtype: %s" % dtype
+            f"RNN cell only supports floating point inputs, but saw dtype: {dtype}"
         )

@@ -53,7 +53,7 @@ if __name__ == "__main__":
     k = args.k
     threshold = args.threshold
 
-    logger.debug(f"Received parameters:")
+    logger.debug("Received parameters:")
     logger.debug(f"User:       {col_user}")
     logger.debug(f"Item:       {col_item}")
     logger.debug(f"Rating:     {col_rating}")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # Log to AzureML dashboard
     run = Run.get_context()
-    run.parent.log("nDCG at {}".format(k), eval_ndcg)
+    run.parent.log(f"nDCG at {k}", eval_ndcg)
 
     score_result = pd.DataFrame({"ndcg_at_k": [eval_ndcg]})
     save_data_frame_to_directory(

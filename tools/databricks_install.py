@@ -154,25 +154,26 @@ def prepare_for_operationalization(
     local_jarname = os.path.basename(cosmosdb_jar_url)
     # only download if you need it:
     if overwrite or not os.path.exists(local_jarname):
-        print("Downloading {}...".format(cosmosdb_jar_url))
+        print(f"Downloading {cosmosdb_jar_url}...")
         local_jarname, _ = urlretrieve(cosmosdb_jar_url, local_jarname)
     else:
-        print("File {} already downloaded.".format(local_jarname))
+        print(f"File {local_jarname} already downloaded.")
 
     # upload jar to dbfs:
     upload_path = Path(dbfs_path, local_jarname).as_posix()
-    print("Uploading CosmosDB driver to databricks at {}".format(upload_path))
+    print(f"Uploading CosmosDB driver to databricks at {upload_path}")
     if dbfs_file_exists(api_client, upload_path) and overwrite:
-        print("Overwriting file at {}".format(upload_path))
+        print(f"Overwriting file at {upload_path}")
     DbfsApi(api_client).cp(
         recursive=False, src=local_jarname, dst=upload_path, overwrite=overwrite
     )
 
     # setup the list of libraries to install:
     # jar library setup
-    libs2install = [{"jar": upload_path}]
-    # setup libraries to install:
-    libs2install.extend([{"pypi": {"package": i}} for i in PYPI_O16N_LIBS])
+    libs2install = [
+        {"jar": upload_path},
+        *[{"pypi": {"package": i}} for i in PYPI_O16N_LIBS],
+    ]
     print("Installing jar and pypi libraries required for operationalization...")
     LibrariesApi(api_client).install_libraries(cluster_id, libs2install)
     return libs2install
@@ -242,9 +243,7 @@ if __name__ == "__main__":
         cluster_info = ClusterApi(my_api_client).create_cluster(DEFAULT_CLUSTER_CONFIG)
         args.cluster_id = cluster_info["cluster_id"]
         print(
-            "Creating a new cluster with name {}. New cluster_id={}".format(
-                DEFAULT_CLUSTER_CONFIG["cluster_name"], args.cluster_id
-            )
+            f'Creating a new cluster with name {DEFAULT_CLUSTER_CONFIG["cluster_name"]}. New cluster_id={args.cluster_id}'
         )
 
     # steps below require the cluster to be running. Check status
@@ -266,12 +265,7 @@ if __name__ == "__main__":
     attempt = 0
     while status["state"] == "PENDING" and attempt < PENDING_SLEEP_ATTEMPTS:
         print(
-            "Current status=={}... Waiting {}s before trying again (attempt {}/{}).".format(
-                status["state"],
-                PENDING_SLEEP_INTERVAL,
-                attempt + 1,
-                PENDING_SLEEP_ATTEMPTS,
-            )
+            f'Current status=={status["state"]}... Waiting {PENDING_SLEEP_INTERVAL}s before trying again (attempt {attempt + 1}/{PENDING_SLEEP_ATTEMPTS}).'
         )
         time.sleep(PENDING_SLEEP_INTERVAL)
         status = ClusterApi(my_api_client).get_cluster(args.cluster_id)
@@ -288,18 +282,14 @@ if __name__ == "__main__":
 
     # install prerequisites
     print(
-        "Installing required Python libraries onto databricks cluster {}".format(
-            args.cluster_id
-        )
+        f"Installing required Python libraries onto databricks cluster {args.cluster_id}"
     )
     libs2install = [{"pypi": {"package": i}} for i in PYPI_PREREQS]
     LibrariesApi(my_api_client).install_libraries(args.cluster_id, libs2install)
 
     # install the library and its dependencies
     print(
-        "Installing the recommenders package onto databricks cluster {}".format(
-            args.cluster_id
-        )
+        f"Installing the recommenders package onto databricks cluster {args.cluster_id}"
     )
     LibrariesApi(my_api_client).install_libraries(
         args.cluster_id, [{"pypi": {"package": "recommenders"}}]
@@ -323,9 +313,7 @@ if __name__ == "__main__":
     if args.mmlspark:
         print("Installing MMLSPARK package...")
         libs2install.extend([MMLSPARK_INFO])
-    print(
-        "Installing {} onto databricks cluster {}".format(libs2install, args.cluster_id)
-    )
+    print(f"Installing {libs2install} onto databricks cluster {args.cluster_id}")
     LibrariesApi(my_api_client).install_libraries(args.cluster_id, libs2install)
 
     # prepare for operationalization if desired:
@@ -339,7 +327,7 @@ if __name__ == "__main__":
         )
 
     # restart the cluster for new installation(s) to take effect.
-    print("Restarting databricks cluster {}".format(args.cluster_id))
+    print(f"Restarting databricks cluster {args.cluster_id}")
     ClusterApi(my_api_client).restart_cluster(args.cluster_id)
 
     # wrap up and send out a final message:

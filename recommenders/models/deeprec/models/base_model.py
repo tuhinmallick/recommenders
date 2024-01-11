@@ -115,8 +115,7 @@ class BaseModel:
         tf.compat.v1.summary.scalar("data_loss", self.data_loss)
         tf.compat.v1.summary.scalar("regular_loss", self.regular_loss)
         tf.compat.v1.summary.scalar("loss", self.loss)
-        merged = tf.compat.v1.summary.merge_all()
-        return merged
+        return tf.compat.v1.summary.merge_all()
 
     def _l2_loss(self):
         l2_loss = tf.zeros([1], dtype=tf.float32)
@@ -281,26 +280,21 @@ class BaseModel:
         optimizer = self.hparams.optimizer
 
         if optimizer == "adadelta":
-            train_step = tf.compat.v1.train.AdadeltaOptimizer(lr)
+            return tf.compat.v1.train.AdadeltaOptimizer(lr)
         elif optimizer == "adagrad":
-            train_step = tf.compat.v1.train.AdagradOptimizer(lr)
-        elif optimizer == "sgd":
-            train_step = tf.compat.v1.train.GradientDescentOptimizer(lr)
+            return tf.compat.v1.train.AdagradOptimizer(lr)
         elif optimizer == "adam":
-            train_step = tf.compat.v1.train.AdamOptimizer(lr)
+            return tf.compat.v1.train.AdamOptimizer(lr)
         elif optimizer == "ftrl":
-            train_step = tf.compat.v1.train.FtrlOptimizer(lr)
-        elif optimizer == "gd":
-            train_step = tf.compat.v1.train.GradientDescentOptimizer(lr)
+            return tf.compat.v1.train.FtrlOptimizer(lr)
         elif optimizer == "padagrad":
-            train_step = tf.compat.v1.train.ProximalAdagradOptimizer(lr)
+            return tf.compat.v1.train.ProximalAdagradOptimizer(lr)
         elif optimizer == "pgd":
-            train_step = tf.compat.v1.train.ProximalGradientDescentOptimizer(lr)
+            return tf.compat.v1.train.ProximalGradientDescentOptimizer(lr)
         elif optimizer == "rmsprop":
-            train_step = tf.compat.v1.train.RMSPropOptimizer(lr)
+            return tf.compat.v1.train.RMSPropOptimizer(lr)
         else:
-            train_step = tf.compat.v1.train.GradientDescentOptimizer(lr)
-        return train_step
+            return tf.compat.v1.train.GradientDescentOptimizer(lr)
 
     def _build_train_opt(self):
         """Construct gradient descent based optimization step
@@ -424,10 +418,7 @@ class BaseModel:
         Raises:
             IOError: if the restore operation failed.
         """
-        act_path = self.hparams.load_saved_model
-        if model_path is not None:
-            act_path = model_path
-
+        act_path = self.hparams.load_saved_model if model_path is None else model_path
         try:
             self.saver.restore(self.sess, act_path)
         except Exception:
@@ -482,20 +473,20 @@ class BaseModel:
                 if not os.path.exists(self.hparams.MODEL_DIR):
                     os.makedirs(self.hparams.MODEL_DIR)
                 if epoch % self.hparams.save_epoch == 0:
-                    save_path_str = join(self.hparams.MODEL_DIR, "epoch_" + str(epoch))
+                    save_path_str = join(self.hparams.MODEL_DIR, f"epoch_{str(epoch)}")
                     self.saver.save(sess=train_sess, save_path=save_path_str)
 
             eval_start = time.time()
             eval_res = self.run_eval(valid_file)
             train_info = ",".join(
                 [
-                    str(item[0]) + ":" + str(item[1])
+                    f"{str(item[0])}:{str(item[1])}"
                     for item in [("logloss loss", epoch_loss / step)]
                 ]
             )
             eval_info = ", ".join(
                 [
-                    str(item[0]) + ":" + str(item[1])
+                    f"{str(item[0])}:{str(item[1])}"
                     for item in sorted(eval_res.items(), key=lambda x: x[0])
                 ]
             )
@@ -503,7 +494,7 @@ class BaseModel:
                 test_res = self.run_eval(test_file)
                 test_info = ", ".join(
                     [
-                        str(item[0]) + ":" + str(item[1])
+                        f"{str(item[0])}:{str(item[1])}"
                         for item in sorted(test_res.items(), key=lambda x: x[0])
                     ]
                 )
@@ -646,8 +637,7 @@ class BaseModel:
         )
         att_logits = tf.tensordot(att_inputs, query, axes=1, name="att_logits")
         att_weights = tf.nn.softmax(att_logits, name="att_weights")
-        output = inputs * tf.expand_dims(att_weights, -1)
-        return output
+        return inputs * tf.expand_dims(att_weights, -1)
 
     def _fcn_net(self, model_output, layer_sizes, scope):
         """Construct the MLP part for the model.
@@ -664,19 +654,18 @@ class BaseModel:
         with tf.compat.v1.variable_scope(scope):
             last_layer_size = model_output.shape[-1]
             layer_idx = 0
-            hidden_nn_layers = []
-            hidden_nn_layers.append(model_output)
+            hidden_nn_layers = [model_output]
             with tf.compat.v1.variable_scope(
-                "nn_part", initializer=self.initializer
-            ) as scope:
+                        "nn_part", initializer=self.initializer
+                    ) as scope:
                 for idx, layer_size in enumerate(layer_sizes):
                     curr_w_nn_layer = tf.compat.v1.get_variable(
-                        name="w_nn_layer" + str(layer_idx),
+                        name=f"w_nn_layer{str(layer_idx)}",
                         shape=[last_layer_size, layer_size],
                         dtype=tf.float32,
                     )
                     curr_b_nn_layer = tf.compat.v1.get_variable(
-                        name="b_nn_layer" + str(layer_idx),
+                        name=f"b_nn_layer{str(layer_idx)}",
                         shape=[layer_size],
                         dtype=tf.float32,
                         initializer=tf.compat.v1.zeros_initializer(),
@@ -694,7 +683,7 @@ class BaseModel:
                         + curr_b_nn_layer
                     )
 
-                    scope = "nn_part" + str(idx)
+                    scope = f"nn_part{str(idx)}"
                     activation = hparams.activation[idx]
 
                     if hparams.enable_BN is True:

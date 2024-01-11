@@ -74,12 +74,7 @@ class SequentialIterator(BaseIterator):
         """
         with open(input_file, "r") as f:
             lines = f.readlines()
-        res = []
-        for line in lines:
-            if not line:
-                continue
-            res.append(self.parser_one_line(line))
-        return res
+        return [self.parser_one_line(line) for line in lines if line]
 
     def parser_one_line(self, line):
         """Parse one string line into feature values.
@@ -102,22 +97,18 @@ class SequentialIterator(BaseIterator):
         item_cate = self.catedict[words[3]] if words[3] in self.catedict else 0
         current_time = float(words[4])
 
-        item_history_sequence = []
-        cate_history_sequence = []
         time_history_sequence = []
 
         item_history_words = words[5].strip().split(",")
-        for item in item_history_words:
-            item_history_sequence.append(
-                self.itemdict[item] if item in self.itemdict else 0
-            )
-
+        item_history_sequence = [
+            self.itemdict[item] if item in self.itemdict else 0
+            for item in item_history_words
+        ]
         cate_history_words = words[6].strip().split(",")
-        for cate in cate_history_words:
-            cate_history_sequence.append(
-                self.catedict[cate] if cate in self.catedict else 0
-            )
-
+        cate_history_sequence = [
+            self.catedict[cate] if cate in self.catedict else 0
+            for cate in cate_history_words
+        ]
         time_history_words = words[7].strip().split(",")
         time_history_sequence = [float(i) for i in time_history_words]
 
@@ -306,8 +297,8 @@ class SequentialIterator(BaseIterator):
         Returns:
             dict: A dictionary, containing multiple numpy arrays that are convenient for further operation.
         """
+        instance_cnt = len(label_list)
         if batch_num_ngs:
-            instance_cnt = len(label_list)
             if instance_cnt < 5:
                 return
 
@@ -384,8 +375,7 @@ class SequentialIterator(BaseIterator):
                     if count == batch_num_ngs:
                         break
 
-            res = {}
-            res["labels"] = np.asarray(label_list_all, dtype=np.float32).reshape(-1, 1)
+            res = {"labels": np.asarray(label_list_all, dtype=np.float32).reshape(-1, 1)}
             res["users"] = user_list_all
             res["items"] = np.asarray(item_list_all, dtype=np.int32)
             res["cates"] = np.asarray(item_cate_list_all, dtype=np.int32)
@@ -393,13 +383,7 @@ class SequentialIterator(BaseIterator):
             res["item_cate_history"] = item_cate_history_batch_all
             res["mask"] = mask
             res["time"] = time_list_all
-            res["time_diff"] = time_diff_batch
-            res["time_from_first_action"] = time_from_first_action_batch
-            res["time_to_now"] = time_to_now_batch
-            return res
-
         else:
-            instance_cnt = len(label_list)
             history_lengths = [len(item_history_batch[i]) for i in range(instance_cnt)]
             max_seq_length_batch = self.max_seq_length
             item_history_batch_all = np.zeros(
@@ -434,8 +418,7 @@ class SequentialIterator(BaseIterator):
                 ] = time_from_first_action_list[i][-this_length:]
                 time_to_now_batch[i, :this_length] = time_to_now_list[i][-this_length:]
 
-            res = {}
-            res["labels"] = np.asarray(label_list, dtype=np.float32).reshape(-1, 1)
+            res = {"labels": np.asarray(label_list, dtype=np.float32).reshape(-1, 1)}
             res["users"] = np.asarray(user_list, dtype=np.float32)
             res["items"] = np.asarray(item_list, dtype=np.int32)
             res["cates"] = np.asarray(item_cate_list, dtype=np.int32)
@@ -443,10 +426,11 @@ class SequentialIterator(BaseIterator):
             res["item_cate_history"] = item_cate_history_batch_all
             res["mask"] = mask
             res["time"] = np.asarray(time_list, dtype=np.float32)
-            res["time_diff"] = time_diff_batch
-            res["time_from_first_action"] = time_from_first_action_batch
-            res["time_to_now"] = time_to_now_batch
-            return res
+
+        res["time_diff"] = time_diff_batch
+        res["time_from_first_action"] = time_from_first_action_batch
+        res["time_to_now"] = time_to_now_batch
+        return res
 
     def gen_feed_dict(self, data_dict):
         """Construct a dictionary that maps graph elements to values.
@@ -460,7 +444,7 @@ class SequentialIterator(BaseIterator):
         """
         if not data_dict:
             return dict()
-        feed_dict = {
+        return {
             self.labels: data_dict["labels"],
             self.users: data_dict["users"],
             self.items: data_dict["items"],
@@ -473,4 +457,3 @@ class SequentialIterator(BaseIterator):
             self.time_from_first_action: data_dict["time_from_first_action"],
             self.time_to_now: data_dict["time_to_now"],
         }
-        return feed_dict

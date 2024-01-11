@@ -111,13 +111,11 @@ class SUMModel(SequentialBaseModel):
             input_embedding_dim,
         ]
         sumcells = {"SUM": SUMCell, "SUMV2": SUMV2Cell}
-        sumCell = sumcells[hparams.cell]
         res = None
-        if hparams.cell in ["SUM", "SUMV2"]:
-            res = sumCell(*input_params)
-        else:
+        if hparams.cell not in ["SUM", "SUMV2"]:
             raise ValueError("ERROR! Cell type not support: {0}".format(hparams.cell))
-        return res
+        sumCell = sumcells[hparams.cell]
+        return sumCell(*input_params)
 
     def _build_sum(self, cell):
         """Generate  user memory states from behavior sequence

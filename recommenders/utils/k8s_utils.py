@@ -26,9 +26,7 @@ def qps_to_replicas(
     concurrent_queries = target_qps * processing_time / target_utilization
     replicas = ceil(concurrent_queries / max_qp_replica)
     logger.info(
-        "Approximately {} replicas are estimated to support {} queries per second.".format(
-            replicas, target_qps
-        )
+        f"Approximately {replicas} replicas are estimated to support {target_qps} queries per second."
     )
     return replicas
 
@@ -49,9 +47,7 @@ def replicas_to_qps(
     """
     qps = floor(num_replicas * max_qp_replica * target_utilization / processing_time)
     logger.info(
-        "Approximately {} queries per second are supported by {} replicas.".format(
-            qps, num_replicas
-        )
+        f"Approximately {qps} queries per second are supported by {num_replicas} replicas."
     )
     return qps
 
@@ -74,8 +70,6 @@ def nodes_to_replicas(n_cores_per_node, n_nodes=3, cpu_cores_per_replica=0.1):
     n_cores_avail = (n_cores_per_node - 0.5) * n_nodes - 4.45
     replicas = floor(n_cores_avail / cpu_cores_per_replica)
     logger.info(
-        "Approximately {} replicas are supported by {} nodes with {} cores each.".format(
-            replicas, n_nodes, n_cores_per_node
-        )
+        f"Approximately {replicas} replicas are supported by {n_nodes} nodes with {n_cores_per_node} cores each."
     )
     return replicas

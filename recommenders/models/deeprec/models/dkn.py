@@ -146,8 +146,7 @@ class DKN(BaseModel):
         self.keep_prob_train = 1 - np.array(hparams.dropout)
         self.keep_prob_test = np.ones_like(hparams.dropout)
         with tf.compat.v1.variable_scope("DKN"):
-            logit = self._build_dkn()
-            return logit
+            return self._build_dkn()
 
     def _build_dkn(self):
         """The main function to create DKN's logic.
@@ -172,17 +171,16 @@ class DKN(BaseModel):
         dnn_channel_part = 2
         last_layer_size = dnn_channel_part * self.num_filters_total
         layer_idx = 0
-        hidden_nn_layers = []
-        hidden_nn_layers.append(nn_input)
+        hidden_nn_layers = [nn_input]
         with tf.compat.v1.variable_scope("nn_part", initializer=self.initializer):
             for idx, layer_size in enumerate(hparams.layer_sizes):
                 curr_w_nn_layer = tf.compat.v1.get_variable(
-                    name="w_nn_layer" + str(layer_idx),
+                    name=f"w_nn_layer{str(layer_idx)}",
                     shape=[last_layer_size, layer_size],
                     dtype=tf.float32,
                 )
                 curr_b_nn_layer = tf.compat.v1.get_variable(
-                    name="b_nn_layer" + str(layer_idx),
+                    name=f"b_nn_layer{str(layer_idx)}",
                     shape=[layer_size],
                     dtype=tf.float32,
                 )
@@ -215,10 +213,9 @@ class DKN(BaseModel):
             )
             self.layer_params.append(w_nn_output)
             self.layer_params.append(b_nn_output)
-            nn_output = tf.compat.v1.nn.xw_plus_b(
+            return tf.compat.v1.nn.xw_plus_b(
                 hidden_nn_layers[-1], w_nn_output, b_nn_output
             )
-            return nn_output
 
     def _build_pair_attention(
         self,
@@ -384,10 +381,8 @@ class DKN(BaseModel):
 
         # Create a convolution + maxpool layer for each filter size
         pooled_outputs = []
-        for i, filter_size in enumerate(filter_sizes):
-            with tf.compat.v1.variable_scope(
-                "conv-maxpool-%s" % filter_size, initializer=self.initializer
-            ):
+        for filter_size in filter_sizes:
+            with tf.compat.v1.variable_scope(f"conv-maxpool-{filter_size}", initializer=self.initializer):
                 # Convolution Layer
                 if hparams.use_entity and hparams.use_context:
                     filter_shape = [filter_size, dim * 3, 1, num_filters]
@@ -436,8 +431,7 @@ class DKN(BaseModel):
         # self.num_filters_total is the kims cnn output dimension
         self.num_filters_total = num_filters * len(filter_sizes)
         h_pool = tf.concat(pooled_outputs, axis=-1)
-        h_pool_flat = tf.reshape(h_pool, [-1, self.num_filters_total])
-        return h_pool_flat
+        return tf.reshape(h_pool, [-1, self.num_filters_total])
 
     def infer_embedding(self, sess, feed_dict):
         """Infer document embedding in feed_dict with current model.

@@ -115,7 +115,7 @@ class SequentialBaseModel(BaseModel):
             )
 
         train_sess = self.sess
-        eval_info = list()
+        eval_info = []
 
         best_metric, self.best_epoch = 0, 0
 
@@ -150,7 +150,7 @@ class SequentialBaseModel(BaseModel):
                     epoch,
                     ",".join(
                         [
-                            "" + str(key) + ":" + str(value)
+                            f"{str(key)}:{str(value)}"
                             for key, value in valid_res.items()
                         ]
                     ),
@@ -159,12 +159,12 @@ class SequentialBaseModel(BaseModel):
             eval_info.append((epoch, valid_res))
 
             progress = False
-            early_stop = self.hparams.EARLY_STOP
             if valid_res[eval_metric] > best_metric:
                 best_metric = valid_res[eval_metric]
                 self.best_epoch = epoch
                 progress = True
             else:
+                early_stop = self.hparams.EARLY_STOP
                 if early_stop > 0 and epoch - self.best_epoch >= early_stop:
                     print("early stop at epoch {0}!".format(epoch))
                     break
@@ -175,7 +175,7 @@ class SequentialBaseModel(BaseModel):
                 if progress:
                     checkpoint_path = self.saver.save(
                         sess=train_sess,
-                        save_path=self.hparams.MODEL_DIR + "epoch_" + str(epoch),
+                        save_path=f"{self.hparams.MODEL_DIR}epoch_{str(epoch)}",
                     )
                     checkpoint_path = self.saver.save(  # noqa: F841
                         sess=train_sess,
@@ -336,11 +336,11 @@ class SequentialBaseModel(BaseModel):
 
     def _add_norm(self):
         """Regularization for embedding variables and other variables."""
-        all_variables, embed_variables = (
-            tf.compat.v1.trainable_variables(),
-            tf.compat.v1.trainable_variables(
-                self.sequential_scope._name + "/embedding"
-            ),
+        (
+            all_variables,
+            embed_variables,
+        ) = tf.compat.v1.trainable_variables(), tf.compat.v1.trainable_variables(
+            f"{self.sequential_scope._name}/embedding"
         )
         layer_params = list(set(all_variables) - set(embed_variables))
         layer_params = [a for a in layer_params if "_no_reg" not in a.name]

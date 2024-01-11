@@ -31,8 +31,7 @@ class MicrosoftAcademicGraph:
         schema = {}
         for field in self.streams[stream_name]:
             fieldname, fieldtype = field.split(":")
-            nullable = fieldtype.endswith("?")
-            if nullable:
+            if nullable := fieldtype.endswith("?"):
                 fieldtype = fieldtype[:-1]
             if fieldtype == "DateTime":
                 date_columns.append(fieldname)

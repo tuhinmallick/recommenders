@@ -67,8 +67,7 @@ class NAMLModel(BaseModel):
             batch_data["clicked_vert_batch"],
             batch_data["clicked_subvert_batch"],
         ]
-        input_feature = np.concatenate(input_feature, axis=-1)
-        return input_feature
+        return np.concatenate(input_feature, axis=-1)
 
     def _get_news_feature_from_iter(self, batch_data):
         """get input of news encoder
@@ -84,8 +83,7 @@ class NAMLModel(BaseModel):
             batch_data["candidate_vert_batch"],
             batch_data["candidate_subvert_batch"],
         ]
-        input_feature = np.concatenate(input_feature, axis=-1)
-        return input_feature
+        return np.concatenate(input_feature, axis=-1)
 
     def _build_graph(self):
         """Build NAML model and scorer.
@@ -120,10 +118,9 @@ class NAMLModel(BaseModel):
             click_news_presents
         )
 
-        model = keras.Model(
+        return keras.Model(
             his_input_title_body_verts, user_present, name="user_encoder"
         )
-        return model
 
     def _build_newsencoder(self, embedding_layer):
         """The main function to create news encoder of NAML.
@@ -171,8 +168,7 @@ class NAMLModel(BaseModel):
             concate_repr
         )
 
-        model = keras.Model(input_title_body_verts, news_repr, name="news_encoder")
-        return model
+        return keras.Model(input_title_body_verts, news_repr, name="news_encoder")
 
     def _build_titleencoder(self, embedding_layer):
         """build title encoder of NAML news encoder.
@@ -200,8 +196,7 @@ class NAMLModel(BaseModel):
         pred_title = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
         pred_title = layers.Reshape((1, hparams.filter_num))(pred_title)
 
-        model = keras.Model(sequences_input_title, pred_title, name="title_encoder")
-        return model
+        return keras.Model(sequences_input_title, pred_title, name="title_encoder")
 
     def _build_bodyencoder(self, embedding_layer):
         """build body encoder of NAML news encoder.
@@ -229,8 +224,7 @@ class NAMLModel(BaseModel):
         pred_body = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
         pred_body = layers.Reshape((1, hparams.filter_num))(pred_body)
 
-        model = keras.Model(sequences_input_body, pred_body, name="body_encoder")
-        return model
+        return keras.Model(sequences_input_body, pred_body, name="body_encoder")
 
     def _build_vertencoder(self):
         """build vert encoder of NAML news encoder.
@@ -254,8 +248,7 @@ class NAMLModel(BaseModel):
         )(vert_emb)
         pred_vert = layers.Reshape((1, hparams.filter_num))(pred_vert)
 
-        model = keras.Model(input_vert, pred_vert, name="vert_encoder")
-        return model
+        return keras.Model(input_vert, pred_vert, name="vert_encoder")
 
     def _build_subvertencoder(self):
         """build subvert encoder of NAML news encoder.
@@ -279,8 +272,7 @@ class NAMLModel(BaseModel):
         )(subvert_emb)
         pred_subvert = layers.Reshape((1, hparams.filter_num))(pred_subvert)
 
-        model = keras.Model(input_subvert, pred_subvert, name="subvert_encoder")
-        return model
+        return keras.Model(input_subvert, pred_subvert, name="subvert_encoder")
 
     def _build_naml(self):
         """The main function to create NAML's logic. The core of NAML

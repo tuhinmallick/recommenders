@@ -54,12 +54,10 @@ def stop_watching_memory():
         ip.events.unregister("post_run_cell", watch_memory)
     except ValueError:
         print("ERROR: problem when unregistering")
-        pass
     try:
         ip.events.unregister("pre_run_cell", pre_run_cell)
     except ValueError:
         print("ERROR: problem when unregistering")
-        pass
 
 
 def watch_memory():
@@ -72,7 +70,7 @@ def watch_memory():
     # calculate time delta using global t1 (from the pre-run event) and current time
     time_delta_secs = time.time() - t1
     num_commands = len(input_cells) - 1
-    cmd = "In [{}]".format(num_commands)
+    cmd = f"In [{num_commands}]"
     # convert the results into a pretty string
     output_template = (
         "{cmd} used {memory_delta:0.4f} Mb RAM in "
@@ -88,7 +86,7 @@ def watch_memory():
         total_memory=total_memory,
     )
     if watching_memory:
-        print(str(output))
+        print(output)
     previous_call_memory_usage = new_memory_usage
 
 

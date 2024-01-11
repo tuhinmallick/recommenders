@@ -104,7 +104,7 @@ class DataFile:
         elif self.line_num == 0:
             self.row = self._extract_row_data(next(self.reader, None))
             if self.row is None:
-                raise EmptyFileException("{} is empty.".format(self.filename))
+                raise EmptyFileException(f"{self.filename} is empty.")
         else:
             raise StopIteration  # end of file
         self.next_row = self._extract_row_data(next(self.reader, None))
@@ -116,9 +116,7 @@ class DataFile:
         missing_fields = set(fields_to_check).difference(set(self.reader.fieldnames))
         if len(missing_fields):
             raise MissingFieldsException(
-                "Columns {} not in header of file {}".format(
-                    missing_fields, self.filename
-                )
+                f"Columns {missing_fields} not in header of file {self.filename}"
             )
 
     def _extract_row_data(self, row):
@@ -129,9 +127,7 @@ class DataFile:
         rating = float(row[self.col_rating])
         if self.binary:
             rating = float(rating > 0)
-        test_batch = None
-        if self.col_test_batch:
-            test_batch = int(row[self.col_test_batch])
+        test_batch = int(row[self.col_test_batch]) if self.col_test_batch else None
         return {
             self.col_user: user,
             self.col_item: item,
@@ -142,7 +138,7 @@ class DataFile:
     def _init_data(self):
         # Compile lists of unique users and items, assign IDs to users and items,
         # and ensure file is sorted by user (and batch index if test set)
-        logger.info("Indexing {} ...".format(self.filename))
+        logger.info(f"Indexing {self.filename} ...")
         with self:
             user_items = []
             self.item2id, self.user2id = OrderedDict(), OrderedDict()
@@ -159,20 +155,16 @@ class DataFile:
                 user_items.append(item)
 
                 if (next_user != user) or self.next_row is None:
-                    if not self.end_of_file:
-                        if next_user in self.users:
-                            raise FileNotSortedException(
-                                "File {} is not sorted by user".format(self.filename)
-                            )
-                    self.user2id[user] = len(self.user2id)
-                if self.col_test_batch:
-                    if (next_test_batch != test_batch) or self.next_row is None:
+                    if next_user in self.users:
                         if not self.end_of_file:
-                            if next_test_batch < batch_index:
+                            raise FileNotSortedException(f"File {self.filename} is not sorted by user")
+                    self.user2id[user] = len(self.user2id)
+                if (next_test_batch != test_batch) or self.next_row is None:
+                    if self.col_test_batch:
+                        if next_test_batch < batch_index:
+                            if not self.end_of_file:
                                 raise FileNotSortedException(
-                                    "File {} is not sorted by {}".format(
-                                        self.filename, self.col_test_batch
-                                    )
+                                    f"File {self.filename} is not sorted by {self.col_test_batch}"
                                 )
                         batch_index += 1
             self.batch_indices_range = range(0, batch_index)
@@ -194,9 +186,7 @@ class DataFile:
         # fast forward in file to user/test batch
         while (self.line_num == 0) or (self.row[key_col] != key):
             if self.end_of_file:
-                raise MissingUserException(
-                    "User {} not in file {}".format(key, self.filename)
-                )
+                raise MissingUserException(f"User {key} not in file {self.filename}")
             next(self)
         # collect user/test batch data
         while self.row[key_col] == key:
@@ -280,20 +270,7 @@ class NegativeSampler:
 
         k = min(self.n_samples, self.population_size)
         if k < self.n_samples and self.print_warnings:
-            warning_string = (
-                "The population of negative items to sample from is too small for user {}. "
-                "Samples needed = {}, negative items = {}. "
-                "Reducing samples to {} for this user."
-                "If an equal number of negative samples for each user is required in the {} set, sample with replacement or reduce {}. "
-                "This warning can be turned off by setting print_warnings=False".format(
-                    self.user,
-                    self.n_samples,
-                    self.population_size,
-                    self.population_size,
-                    dataset_name,
-                    n_neg_var,
-                )
-            )
+            warning_string = f"The population of negative items to sample from is too small for user {self.user}. Samples needed = {self.n_samples}, negative items = {self.population_size}. Reducing samples to {self.population_size} for this user.If an equal number of negative samples for each user is required in the {dataset_name} set, sample with replacement or reduce {n_neg_var}. This warning can be turned off by setting print_warnings=False"
             logging.warning(warning_string)
         self.n_samples = k
 
@@ -403,9 +380,7 @@ class Dataset(object):
 
     def _create_test_file(self):
 
-        logger.info(
-            "Creating full leave-one-out test file {} ...".format(self.test_file_full)
-        )
+        logger.info(f"Creating full leave-one-out test file {self.test_file_full} ...")
 
         # create empty csv
         pd.DataFrame(
@@ -482,12 +457,11 @@ class Dataset(object):
             shuffle_buffer_df.shape[0]
         )  # shuffle the buffer
         for batch in self._split_into_batches(shuffle_buffer_df, batch_size):
-            if batch.shape[0] == batch_size:
-                if write_to:
-                    batch.to_csv(write_to, mode="a", header=False, index=False)
-                yield prepare_batch(batch)
-            else:
+            if batch.shape[0] != batch_size:
                 return batch
+            if write_to:
+                batch.to_csv(write_to, mode="a", header=False, index=False)
+            yield prepare_batch(batch)
 
     def train_loader(
         self, batch_size, shuffle_size=None, yield_id=False, write_to=None
@@ -539,7 +513,7 @@ class Dataset(object):
                     [user_positive_examples, user_negative_examples]
                 )
                 shuffle_buffer.append(user_examples)
-                shuffle_buffer_len = sum([df.shape[0] for df in shuffle_buffer])
+                shuffle_buffer_len = sum(df.shape[0] for df in shuffle_buffer)
                 if shuffle_buffer_len >= shuffle_size:
                     buffer_remainder = yield from self._release_shuffle_buffer(
                         shuffle_buffer, batch_size, yield_id, write_to

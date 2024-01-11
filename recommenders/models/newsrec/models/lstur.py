@@ -120,10 +120,9 @@ class LSTURModel(BaseModel):
                 kernel_initializer=keras.initializers.glorot_uniform(seed=self.seed),
             )(user_present)
 
-        model = keras.Model(
+        return keras.Model(
             [his_input_title, user_indexes], user_present, name="user_encoder"
         )
-        return model
 
     def _build_newsencoder(self, embedding_layer):
         """The main function to create news encoder of LSTUR.
@@ -154,8 +153,7 @@ class LSTURModel(BaseModel):
         )
         pred_title = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
         print(pred_title)
-        model = keras.Model(sequences_input_title, pred_title, name="news_encoder")
-        return model
+        return keras.Model(sequences_input_title, pred_title, name="news_encoder")
 
     def _build_lstur(self):
         """The main function to create LSTUR's logic. The core of LSTUR

@@ -236,9 +236,7 @@ intersphinx_mapping = {"https://docs.python.org/": None}
 # Ensure that __init__() is always documented
 # source: https://stackoverflow.com/a/5599712
 def skip(app, what, name, obj, would_skip, options):
-    if name == "__init__":
-        return False
-    return would_skip
+    return False if name == "__init__" else would_skip
 
 
 def setup(app):

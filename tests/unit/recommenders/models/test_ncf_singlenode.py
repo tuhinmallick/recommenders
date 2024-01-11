@@ -55,7 +55,7 @@ def test_init(model_type, n_users, n_items):
     "model_type, n_users, n_items", [("NeuMF", 5, 5), ("GMF", 5, 5), ("MLP", 5, 5)]
 )
 def test_regular_save_load(model_type, n_users, n_items):
-    ckpt = ".%s" % model_type
+    ckpt = f".{model_type}"
     if os.path.exists(ckpt):
         shutil.rmtree(ckpt)
 
@@ -103,7 +103,7 @@ def test_regular_save_load(model_type, n_users, n_items):
 @pytest.mark.parametrize("n_users, n_items", [(5, 5), (4, 8)])
 def test_neumf_save_load(n_users, n_items):
     model_type = "gmf"
-    ckpt_gmf = ".%s" % model_type
+    ckpt_gmf = f".{model_type}"
     if os.path.exists(ckpt_gmf):
         shutil.rmtree(ckpt_gmf)
     model = NCF(n_users=n_users, n_items=n_items, model_type=model_type, n_epochs=1)
@@ -113,11 +113,11 @@ def test_neumf_save_load(n_users, n_items):
     del model
 
     model_type = "mlp"
-    ckpt_mlp = ".%s" % model_type
+    ckpt_mlp = f".{model_type}"
     if os.path.exists(ckpt_mlp):
         shutil.rmtree(ckpt_mlp)
     model = NCF(n_users=n_users, n_items=n_items, model_type=model_type, n_epochs=1)
-    model.save(".%s" % model_type)
+    model.save(f".{model_type}")
     P_mlp = model.sess.run(model.embedding_mlp_P)
     Q_mlp = model.sess.run(model.embedding_mlp_Q)
     del model

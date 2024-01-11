@@ -91,8 +91,8 @@ class AffinityMatrix:
         self.map_items = {x: i for i, x in enumerate(unique_items)}
 
         # map back functions used to get back the original dataframe
-        self.map_back_users = {i: x for i, x in enumerate(unique_users)}
-        self.map_back_items = {i: x for i, x in enumerate(unique_items)}
+        self.map_back_users = dict(enumerate(unique_users))
+        self.map_back_items = dict(enumerate(unique_items))
 
         self.df_.loc[:, "hashedItems"] = self.df_[self.col_item].map(self.map_items)
         self.df_.loc[:, "hashedUsers"] = self.df_[self.col_user].map(self.map_users)
@@ -167,11 +167,7 @@ class AffinityMatrix:
         items = list(itertools.chain.from_iterable(items))
         ratings = list(itertools.chain.from_iterable(ratings))
 
-        if kind == "ratings":
-            col_out = self.col_rating
-        else:
-            col_out = self.col_pred
-
+        col_out = self.col_rating if kind == "ratings" else self.col_pred
         # create a df
         out_df = pd.DataFrame.from_dict(
             {self.col_user: userids, self.col_item: items, col_out: ratings}

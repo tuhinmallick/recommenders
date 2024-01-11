@@ -990,10 +990,9 @@ def _get_pairwise_items(
 
     df_user_i1_i2 = pd.merge(df_user_i1, df_user_i2, how="inner", on=[col_user])
 
-    df_pairwise_items = df_user_i1_i2[(df_user_i1_i2["i1"] <= df_user_i1_i2["i2"])][
+    return df_user_i1_i2[(df_user_i1_i2["i1"] <= df_user_i1_i2["i2"])][
         [col_user, "i1", "i2"]
     ].reset_index(drop=True)
-    return df_pairwise_items
 
 
 @lru_cache_df(maxsize=1)
@@ -1072,13 +1071,11 @@ def _get_cooccurrence_similarity(
     item_co_occur[col_sim] = item_co_occur["count"] / (
         item_co_occur["i1_sqrt_count"] * item_co_occur["i2_sqrt_count"]
     )
-    df_cosine_similarity = (
+    return (
         item_co_occur[["i1", "i2", col_sim]]
         .sort_values(["i1", "i2"])
         .reset_index(drop=True)
     )
-
-    return df_cosine_similarity
 
 
 @lru_cache_df(maxsize=1)
@@ -1109,11 +1106,9 @@ def _get_item_feature_similarity(
         axis=1,
     )
 
-    df_cosine_similarity = df_item_feature_pair[["i1", "i2", col_sim]].sort_values(
+    return df_item_feature_pair[["i1", "i2", col_sim]].sort_values(
         ["i1", "i2"]
     )
-
-    return df_cosine_similarity
 
 
 # Diversity metrics
@@ -1264,8 +1259,7 @@ def diversity(
         col_item,
         col_sim,
     )
-    avg_diversity = df_user_diversity.agg({"user_diversity": "mean"})[0]
-    return avg_diversity
+    return df_user_diversity.agg({"user_diversity": "mean"})[0]
 
 
 # Novelty metrics
@@ -1310,13 +1304,11 @@ def historical_item_novelty(
         {"count": train_df.groupby([col_item]).size()}
     ).reset_index()
     item_count["item_novelty"] = -np.log2(item_count["count"] / n_records)
-    df_item_novelty = (
+    return (
         item_count[[col_item, "item_novelty"]]
         .sort_values(col_item)
         .reset_index(drop=True)
     )
-
-    return df_item_novelty
 
 
 @_check_column_dtypes_novelty_coverage
@@ -1351,9 +1343,7 @@ def novelty(train_df, reco_df, col_user=DEFAULT_USER_COL, col_item=DEFAULT_ITEM_
     reco_item_novelty["product"] = (
         reco_item_novelty["count"] * reco_item_novelty["item_novelty"]
     )
-    avg_novelty = reco_item_novelty.agg({"product": "sum"})[0] / n_recommendations
-
-    return avg_novelty
+    return reco_item_novelty.agg({"product": "sum"})[0] / n_recommendations
 
 
 # Serendipity metrics
@@ -1555,8 +1545,7 @@ def serendipity(
         col_sim,
         col_relevance,
     )
-    avg_serendipity = df_user_serendipity.agg({"user_serendipity": "mean"})[0]
-    return avg_serendipity
+    return df_user_serendipity.agg({"user_serendipity": "mean"})[0]
 
 
 # Coverage metrics
@@ -1589,9 +1578,7 @@ def catalog_coverage(
     # distinct item count in train_df
     count_distinct_item_train = train_df[col_item].nunique()
 
-    # catalog coverage
-    c_coverage = count_distinct_item_reco / count_distinct_item_train
-    return c_coverage
+    return count_distinct_item_reco / count_distinct_item_train
 
 
 @_check_column_dtypes_novelty_coverage
@@ -1630,6 +1617,4 @@ def distributional_coverage(
     df_entropy["p(i)"] = df_entropy["count"] / count_row_reco
     df_entropy["entropy(i)"] = df_entropy["p(i)"] * np.log2(df_entropy["p(i)"])
 
-    d_coverage = -df_entropy.agg({"entropy(i)": "sum"})[0]
-
-    return d_coverage
+    return -df_entropy.agg({"entropy(i)": "sum"})[0]

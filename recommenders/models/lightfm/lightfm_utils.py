@@ -32,7 +32,7 @@ def compare_metric(df_list, metric="prec", stage="test"):
     Returns:
         pandas.DataFrame: Metrics
     """
-    colnames = ["model" + str(x) for x in list(range(1, len(df_list) + 1))]
+    colnames = [f"model{str(x)}" for x in list(range(1, len(df_list) + 1))]
     models = [
         df[(df["stage"] == stage) & (df["metric"] == metric)]["value"]
         .reset_index(drop=True)

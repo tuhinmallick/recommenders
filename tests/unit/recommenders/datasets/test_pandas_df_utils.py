@@ -122,7 +122,7 @@ def test_negative_feedback_sampler():
         ratio_neg_per_user=3,
     )
     assert sample_df.columns[2] == "test_feedback"
-    assert set(sample_df["test_feedback"].unique()) == set([2.4, 0.2])
+    assert set(sample_df["test_feedback"].unique()) == {2.4, 0.2}
 
 
 def test_filter_by():

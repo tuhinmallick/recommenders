@@ -90,10 +90,9 @@ class NPAModel(BaseModel):
             seed=self.seed,
         )([click_title_presents, layers.Dense(hparams.attention_hidden_dim)(u_emb)])
 
-        model = keras.Model(
+        return keras.Model(
             [his_input_title, user_indexes], user_present, name="user_encoder"
         )
-        return model
 
     def _build_newsencoder(self, embedding_layer, user_embedding_layer):
         """The main function to create news encoder of NPA.
@@ -139,9 +138,7 @@ class NPAModel(BaseModel):
             seed=self.seed,
         )([y, layers.Dense(hparams.attention_hidden_dim)(u_emb)])
 
-        # pred_title = Reshape((1, feature_size))(pred_title)
-        model = keras.Model(sequence_title_uindex, pred_title, name="news_encoder")
-        return model
+        return keras.Model(sequence_title_uindex, pred_title, name="news_encoder")
 
     def _build_npa(self):
         """The main function to create NPA's logic. The core of NPA

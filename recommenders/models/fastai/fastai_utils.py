@@ -65,11 +65,11 @@ def score(
         {user_col: test_df[user_col], item_col: test_df[item_col], prediction_col: pred}
     )
     scores = scores.sort_values([user_col, prediction_col], ascending=[True, False])
-    if top_k is not None:
-        top_scores = scores.groupby(user_col).head(top_k).reset_index(drop=True)
-    else:
-        top_scores = scores
-    return top_scores
+    return (
+        scores.groupby(user_col).head(top_k).reset_index(drop=True)
+        if top_k is not None
+        else scores
+    )
 
 
 def hide_fastai_progress_bar():

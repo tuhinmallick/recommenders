@@ -59,7 +59,7 @@ if __name__ == "__main__":
     col_item = args.col_item
     seed = args.seed
 
-    logger.debug(f"Received parameters:")
+    logger.debug("Received parameters:")
     logger.debug(f"Ratio:    {ratio}")
     logger.debug(f"User:    {col_user}")
     logger.debug(f"Item:    {col_item}")

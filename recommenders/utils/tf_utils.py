@@ -79,11 +79,7 @@ def pandas_input_fn(
     """
 
     X_df = df.copy()
-    if y_col is not None:
-        y = X_df.pop(y_col).values
-    else:
-        y = None
-
+    y = X_df.pop(y_col).values if y_col is not None else None
     X = {}
     for col in X_df.columns:
         values = X_df[col].values
@@ -137,7 +133,7 @@ def build_optimizer(name, lr=0.001, **kwargs):
     try:
         optimizer_class = OPTIMIZERS[name]
     except KeyError:
-        raise KeyError("Optimizer name should be one of: {}".format(list(OPTIMIZERS)))
+        raise KeyError(f"Optimizer name should be one of: {list(OPTIMIZERS)}")
 
     # Set parameters
     params = {}
@@ -148,7 +144,7 @@ def build_optimizer(name, lr=0.001, **kwargs):
         params["l2_regularization_strength"] = kwargs.get(
             "l2_regularization_strength", 0.0
         )
-    elif name == "momentum" or name == "rmsprop":
+    elif name in ["momentum", "rmsprop"]:
         params["momentum"] = kwargs.get("momentum", 0.0)
 
     return optimizer_class(learning_rate=lr, **params)
@@ -278,11 +274,10 @@ class _TrainLogHook(tf.estimator.SessionRunHook):
             self.step = 0
 
     def before_run(self, run_context):
-        if self.global_step_tensor is not None:
-            requests = {"global_step": self.global_step_tensor}
-            return tf.estimator.SessionRunArgs(requests)
-        else:
+        if self.global_step_tensor is None:
             return None
+        requests = {"global_step": self.global_step_tensor}
+        return tf.estimator.SessionRunArgs(requests)
 
     def after_run(self, run_context, run_values):
         if self.global_step_tensor is not None:

@@ -102,8 +102,8 @@ class NextItNetIterator(SequentialIterator):
         Returns:
             dict: A dictionary, contains multiple numpy arrays that are convenient for further operation.
         """
+        instance_cnt = len(label_list)
         if batch_num_ngs:
-            instance_cnt = len(label_list)
             if instance_cnt < 5:
                 return
 
@@ -200,10 +200,7 @@ class NextItNetIterator(SequentialIterator):
                     item_cate_list_all.append(negative_item_cate_list)
                     count += 1
 
-            res = {}
-            res["labels"] = np.asarray(
-                label_list_all, dtype=np.float32
-            )  # .reshape(-1,1)
+            res = {"labels": np.asarray(label_list_all, dtype=np.float32)}
             res["users"] = user_list_all
             res["items"] = np.asarray(item_list_all, dtype=np.int32)
             res["cates"] = np.asarray(item_cate_list_all, dtype=np.int32)
@@ -211,14 +208,7 @@ class NextItNetIterator(SequentialIterator):
             res["item_cate_history"] = item_cate_history_batch_all
             res["mask"] = mask
             res["time"] = time_list_all
-            res["time_diff"] = time_diff_batch
-            res["time_from_first_action"] = time_from_first_action_batch
-            res["time_to_now"] = time_to_now_batch
-
-            return res
-
         else:
-            instance_cnt = len(label_list)
             history_lengths = [len(item_history_batch[i]) for i in range(instance_cnt)]
             max_seq_length_batch = self.max_seq_length
             item_history_batch_all = np.zeros(
@@ -253,8 +243,7 @@ class NextItNetIterator(SequentialIterator):
                 ] = time_from_first_action_list[i][-this_length:]
                 time_to_now_batch[i, -this_length:] = time_to_now_list[i][-this_length:]
 
-            res = {}
-            res["labels"] = np.asarray(label_list, dtype=np.float32).reshape([-1, 1])
+            res = {"labels": np.asarray(label_list, dtype=np.float32).reshape([-1, 1])}
             res["users"] = np.asarray(user_list, dtype=np.float32)
             res["items"] = np.asarray(item_list, dtype=np.int32).reshape([-1, 1])
             res["cates"] = np.asarray(item_cate_list, dtype=np.int32).reshape([-1, 1])
@@ -262,7 +251,9 @@ class NextItNetIterator(SequentialIterator):
             res["item_cate_history"] = item_cate_history_batch_all
             res["mask"] = mask
             res["time"] = np.asarray(time_list, dtype=np.float32)
-            res["time_diff"] = time_diff_batch
-            res["time_from_first_action"] = time_from_first_action_batch
-            res["time_to_now"] = time_to_now_batch
-            return res
+
+        res["time_diff"] = time_diff_batch
+        res["time_from_first_action"] = time_from_first_action_batch
+        res["time_to_now"] = time_to_now_batch
+
+        return res

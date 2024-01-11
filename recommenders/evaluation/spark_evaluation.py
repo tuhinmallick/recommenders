@@ -159,11 +159,7 @@ class SparkRatingEvaluation:
         var1 = self.y_pred_true.selectExpr("variance(label-prediction)").collect()[0][0]
         var2 = self.y_pred_true.selectExpr("variance(label)").collect()[0][0]
 
-        if var1 is None or var2 is None:
-            return -np.inf
-        else: 
-            # numpy divide is more tolerant to var2 being zero
-            return 1 - np.divide(var1, var2)
+        return -np.inf if var1 is None or var2 is None else 1 - np.divide(var1, var2)
 
 
 class SparkRankingEvaluation:
@@ -225,14 +221,12 @@ class SparkRankingEvaluation:
                 "rating_pred should be but is not a Spark DataFrame"
             )  # pragma : No Cover
 
-        # Check if columns exist.
-        true_columns = self.rating_true.columns
         pred_columns = self.rating_pred.columns
 
+        true_columns = self.rating_true.columns
         if self.col_user not in true_columns:
             raise ValueError(
-                "Schema of rating_true not valid. Missing User Col: "
-                + str(true_columns)
+                f"Schema of rating_true not valid. Missing User Col: {str(true_columns)}"
             )
         if self.col_item not in true_columns:
             raise ValueError("Schema of rating_true not valid. Missing Item Col")
@@ -260,9 +254,7 @@ class SparkRankingEvaluation:
 
         if relevancy_method not in relevant_func:
             raise ValueError(
-                "relevancy_method should be one of {}".format(
-                    list(relevant_func.keys())
-                )
+                f"relevancy_method should be one of {list(relevant_func.keys())}"
             )
 
         self.rating_pred = (
@@ -291,7 +283,7 @@ class SparkRankingEvaluation:
 
         self._items_for_user_true = (
             self.rating_true.groupBy(self.col_user)
-            .agg(expr("collect_list(" + self.col_item + ") as ground_truth"))
+            .agg(expr(f"collect_list({self.col_item}) as ground_truth"))
             .select(self.col_user, "ground_truth")
         )
 
@@ -387,17 +379,17 @@ def _get_top_k_items(
     """
     window_spec = Window.partitionBy(col_user).orderBy(col(col_rating).desc())
 
-    # this does not work for rating of the same value.
-    items_for_user = (
+    return (
         dataframe.select(
-            col_user, col_item, col_rating, row_number().over(window_spec).alias("rank")
+            col_user,
+            col_item,
+            col_rating,
+            row_number().over(window_spec).alias("rank"),
         )
         .where(col("rank") <= k)
         .groupby(col_user)
         .agg(F.collect_list(col_item).alias(col_prediction))
     )
-
-    return items_for_user
 
 
 def _get_relevant_items_by_threshold(
@@ -471,19 +463,21 @@ def _get_relevant_items_by_timestamp(
     """
     window_spec = Window.partitionBy(col_user).orderBy(col(col_timestamp).desc())
 
-    items_for_user = (
+    return (
         dataframe.select(
-            col_user, col_item, col_rating, row_number().over(window_spec).alias("rank")
+            col_user,
+            col_item,
+            col_rating,
+            row_number().over(window_spec).alias("rank"),
         )
         .where(col("rank") <= k)
         .withColumn(
-            col_prediction, F.collect_list(col_item).over(Window.partitionBy(col_user))
+            col_prediction,
+            F.collect_list(col_item).over(Window.partitionBy(col_user)),
         )
         .select(col_user, col_prediction)
         .dropDuplicates([col_user, col_prediction])
     )
-
-    return items_for_user
 
 
 class SparkDiversityEvaluation:
@@ -581,20 +575,18 @@ class SparkDiversityEvaluation:
                     StructField(self.col_item_features, VectorUDT()),
                 )
             )
-            if self.item_feature_df is not None:
-
-                if str(required_schema) != str(item_feature_df.schema):
-                    raise Exception(
-                        "Incorrect schema! item_feature_df should have schema "
-                        f"{str(required_schema)} but have {str(item_feature_df.schema)}"
-                    )
-            else:
+            if self.item_feature_df is None:
                 raise Exception(
                     "item_feature_df not specified! item_feature_df must be provided "
                     "if choosing to use item_feature_vector to calculate item similarity. "
                     f"item_feature_df should have schema {str(required_schema)}"
                 )
 
+            if str(required_schema) != str(item_feature_df.schema):
+                raise Exception(
+                    "Incorrect schema! item_feature_df should have schema "
+                    f"{str(required_schema)} but have {str(item_feature_df.schema)}"
+                )
         # check if reco_df contains any user_item pairs that are already shown in train_df
         count_intersection = (
             self.train_df.select(self.col_user, self.col_item)
@@ -931,9 +923,7 @@ class SparkDiversityEvaluation:
             self.train_df.select(self.col_item).distinct().count()
         )
 
-        # catalog coverage
-        c_coverage = count_distinct_item_reco / count_distinct_item_train
-        return c_coverage
+        return count_distinct_item_reco / count_distinct_item_train
 
     def distributional_coverage(self):
         """Calculate distributional coverage for recommendations across all users.
@@ -955,7 +945,4 @@ class SparkDiversityEvaluation:
         df_entropy = df_itemcnt_reco.withColumn(
             "p(i)", F.col("count") / count_row_reco
         ).withColumn("entropy(i)", F.col("p(i)") * F.log2(F.col("p(i)")))
-        # distributional coverage
-        d_coverage = -df_entropy.agg(F.sum("entropy(i)")).collect()[0][0]
-
-        return d_coverage
+        return -df_entropy.agg(F.sum("entropy(i)")).collect()[0][0]

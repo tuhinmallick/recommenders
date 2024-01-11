@@ -141,17 +141,16 @@ def get_train_input(session, train_file_path, npratio=4):
         train_file_path (str): Path to file.
         npration (int): Ratio for negative sampling.
     """
-    fp_train = open(train_file_path, "w", encoding="utf-8")
-    for sess_id in range(len(session)):
-        sess = session[sess_id]
-        userid, _, poss, negs = sess
-        for i in range(len(poss)):
-            pos = poss[i]
-            neg = _newsample(negs, npratio)
-            fp_train.write("1 " + "train_" + userid + " " + pos + "\n")
-            for neg_ins in neg:
-                fp_train.write("0 " + "train_" + userid + " " + neg_ins + "\n")
-    fp_train.close()
+    with open(train_file_path, "w", encoding="utf-8") as fp_train:
+        for sess_id in range(len(session)):
+            sess = session[sess_id]
+            userid, _, poss, negs = sess
+            for i in range(len(poss)):
+                pos = poss[i]
+                neg = _newsample(negs, npratio)
+                fp_train.write("1 " + "train_" + userid + " " + pos + "\n")
+                for neg_ins in neg:
+                    fp_train.write("0 " + "train_" + userid + " " + neg_ins + "\n")
     if os.path.isfile(train_file_path):
         logger.info(f"Train file {train_file_path} successfully generated")
     else:
@@ -165,18 +164,17 @@ def get_valid_input(session, valid_file_path):
         session (list): List of user session with user_id, clicks, positive and negative interactions.
         valid_file_path (str): Path to file.
     """
-    fp_valid = open(valid_file_path, "w", encoding="utf-8")
-    for sess_id in range(len(session)):
-        userid, _, poss, negs = session[sess_id]
-        for i in range(len(poss)):
-            fp_valid.write(
-                "1 " + "valid_" + userid + " " + poss[i] + "%" + str(sess_id) + "\n"
-            )
-        for i in range(len(negs)):
-            fp_valid.write(
-                "0 " + "valid_" + userid + " " + negs[i] + "%" + str(sess_id) + "\n"
-            )
-    fp_valid.close()
+    with open(valid_file_path, "w", encoding="utf-8") as fp_valid:
+        for sess_id in range(len(session)):
+            userid, _, poss, negs = session[sess_id]
+            for i in range(len(poss)):
+                fp_valid.write(
+                    "1 " + "valid_" + userid + " " + poss[i] + "%" + str(sess_id) + "\n"
+                )
+            for i in range(len(negs)):
+                fp_valid.write(
+                    "0 " + "valid_" + userid + " " + negs[i] + "%" + str(sess_id) + "\n"
+                )
     if os.path.isfile(valid_file_path):
         logger.info(f"Validation file {valid_file_path} successfully generated")
     else:
@@ -191,16 +189,15 @@ def get_user_history(train_history, valid_history, user_history_path):
         valid_history (list): Validation history
         user_history_path (str): Path to file.
     """
-    fp_user_history = open(user_history_path, "w", encoding="utf-8")
-    for userid in train_history:
-        fp_user_history.write(
-            "train_" + userid + " " + ",".join(train_history[userid]) + "\n"
-        )
-    for userid in valid_history:
-        fp_user_history.write(
-            "valid_" + userid + " " + ",".join(valid_history[userid]) + "\n"
-        )
-    fp_user_history.close()
+    with open(user_history_path, "w", encoding="utf-8") as fp_user_history:
+        for userid in train_history:
+            fp_user_history.write(
+                f"train_{userid} " + ",".join(train_history[userid]) + "\n"
+            )
+        for userid in valid_history:
+            fp_user_history.write(
+                f"valid_{userid} " + ",".join(valid_history[userid]) + "\n"
+            )
     if os.path.isfile(user_history_path):
         logger.info(f"User history file {user_history_path} successfully generated")
     else:
@@ -292,37 +289,31 @@ def generate_embeddings(
     logger.info("Downloading glove...")
     glove_path = download_and_extract_glove(data_path)
 
-    word_set = set()
     word_embedding_dict = {}
     entity_embedding_dict = {}
 
     logger.info(f"Loading glove with embedding dimension {word_embedding_dim}...")
-    glove_file = "glove.6B." + str(word_embedding_dim) + "d.txt"
-    fp_pretrain_vec = open(os.path.join(glove_path, glove_file), "r", encoding="utf-8")
-    for line in fp_pretrain_vec:
-        linesplit = line.split(" ")
-        word_set.add(linesplit[0])
-        word_embedding_dict[linesplit[0]] = np.asarray(list(map(float, linesplit[1:])))
-    fp_pretrain_vec.close()
-
+    glove_file = f"glove.6B.{str(word_embedding_dim)}d.txt"
+    word_set = set()
+    with open(os.path.join(glove_path, glove_file), "r", encoding="utf-8") as fp_pretrain_vec:
+        for line in fp_pretrain_vec:
+            linesplit = line.split(" ")
+            word_set.add(linesplit[0])
+            word_embedding_dict[linesplit[0]] = np.asarray(list(map(float, linesplit[1:])))
     logger.info("Reading train entities...")
-    fp_entity_vec_train = open(train_entities, "r", encoding="utf-8")
-    for line in fp_entity_vec_train:
-        linesplit = line.split()
-        entity_embedding_dict[linesplit[0]] = np.asarray(
-            list(map(float, linesplit[1:]))
-        )
-    fp_entity_vec_train.close()
-
+    with open(train_entities, "r", encoding="utf-8") as fp_entity_vec_train:
+        for line in fp_entity_vec_train:
+            linesplit = line.split()
+            entity_embedding_dict[linesplit[0]] = np.asarray(
+                list(map(float, linesplit[1:]))
+            )
     logger.info("Reading valid entities...")
-    fp_entity_vec_valid = open(valid_entities, "r", encoding="utf-8")
-    for line in fp_entity_vec_valid:
-        linesplit = line.split()
-        entity_embedding_dict[linesplit[0]] = np.asarray(
-            list(map(float, linesplit[1:]))
-        )
-    fp_entity_vec_valid.close()
-
+    with open(valid_entities, "r", encoding="utf-8") as fp_entity_vec_valid:
+        for line in fp_entity_vec_valid:
+            linesplit = line.split()
+            entity_embedding_dict[linesplit[0]] = np.asarray(
+                list(map(float, linesplit[1:]))
+            )
     logger.info("Generating word and entity indexes...")
     word_dict = {}
     word_index = 1
@@ -331,8 +322,8 @@ def generate_embeddings(
     entity2index = {}
     entity_index = 1
     for doc_id in news_words:
-        news_word_string_dict[doc_id] = [0 for n in range(max_sentence)]
-        news_entity_string_dict[doc_id] = [0 for n in range(max_sentence)]
+        news_word_string_dict[doc_id] = [0 for _ in range(max_sentence)]
+        news_entity_string_dict[doc_id] = [0 for _ in range(max_sentence)]
         surfaceform_entityids = news_entities[doc_id]
         for item in surfaceform_entityids:
             if item[1] not in entity2index and item[1] in entity_embedding_dict:
@@ -343,9 +334,7 @@ def generate_embeddings(
                 if news_words[doc_id][i] not in word_dict:
                     word_dict[news_words[doc_id][i]] = word_index
                     word_index = word_index + 1
-                    news_word_string_dict[doc_id][i] = word_dict[news_words[doc_id][i]]
-                else:
-                    news_word_string_dict[doc_id][i] = word_dict[news_words[doc_id][i]]
+                news_word_string_dict[doc_id][i] = word_dict[news_words[doc_id][i]]
                 for item in surfaceform_entityids:
                     for surface in item[0]:
                         for surface_word in surface.split(" "):
@@ -370,24 +359,23 @@ def generate_embeddings(
     news_feature_path = os.path.join(data_path, "doc_feature.txt")
     logger.info(f"Saving word and entity features in {news_feature_path}")
     fp_doc_string = open(news_feature_path, "w", encoding="utf-8")
-    for doc_id in news_word_string_dict:
+    for doc_id, value in news_word_string_dict.items():
         fp_doc_string.write(
-            doc_id
-            + " "
-            + ",".join(list(map(str, news_word_string_dict[doc_id])))
+            f"{doc_id} "
+            + ",".join(list(map(str, value)))
             + " "
             + ",".join(list(map(str, news_entity_string_dict[doc_id])))
             + "\n"
         )
 
     word_embeddings_path = os.path.join(
-        data_path, "word_embeddings_5w_" + str(word_embedding_dim) + ".npy"
+        data_path, f"word_embeddings_5w_{str(word_embedding_dim)}.npy"
     )
     logger.info(f"Saving word embeddings in {word_embeddings_path}")
     np.save(word_embeddings_path, word_embeddings)
 
     entity_embeddings_path = os.path.join(
-        data_path, "entity_embeddings_5w_" + str(word_embedding_dim) + ".npy"
+        data_path, f"entity_embeddings_5w_{str(word_embedding_dim)}.npy"
     )
     logger.info(f"Saving word embeddings in {entity_embeddings_path}")
     np.save(entity_embeddings_path, entity_embeddings)
@@ -436,7 +424,4 @@ def word_tokenize(sent):
 
     # treat consecutive words or special punctuation as words
     pat = re.compile(r"[\w]+|[.,!?;|]")
-    if isinstance(sent, str):
-        return pat.findall(sent.lower())
-    else:
-        return []
+    return pat.findall(sent.lower()) if isinstance(sent, str) else []

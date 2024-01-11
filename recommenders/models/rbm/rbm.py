@@ -156,10 +156,7 @@ class RBM:
             value=np.random.uniform(size=pr.shape[1]), dtype=tf.float32
         )
 
-        # sample the value of the hidden units
-        h_sampled = tf.nn.relu(tf.sign(pr - g))
-
-        return h_sampled
+        return tf.nn.relu(tf.sign(pr - g))
 
     def multinomial_sampling(self, pr):
         """Multinomial Sampling of ratings
@@ -194,10 +191,7 @@ class RBM:
         # get integer index of the rating to be sampled
         v_argmax = tf.cast(tf.argmax(input=samp, axis=2), "int32")
 
-        # lookup the rating using integer index
-        v_samp = tf.cast(self.ratings_lookup_table.lookup(v_argmax), "float32")
-
-        return v_samp
+        return tf.cast(self.ratings_lookup_table.lookup(v_argmax), "float32")
 
     def multinomial_distribution(self, phi):
         """Probability that unit v has value l given phi: P(v=l|phi)
@@ -239,9 +233,7 @@ class RBM:
         phi_x = tf.matmul(x, self.w) + self.bh
         f = -tf.reduce_sum(input_tensor=tf.nn.softplus(phi_x))
 
-        F = bias + f  # free energy density per training example
-
-        return F
+        return bias + f
 
     def placeholder(self):
         """Initialize the placeholders for the visible units"""
@@ -391,7 +383,7 @@ class RBM:
             if self.debug:
                 print("CD step", self.k)
 
-            for i in range(self.k):  # k_sampling
+            for _ in range(self.k):
                 _, h_k = self.sample_hidden_units(self.v_k)
                 _, self.v_k = self.sample_visible_units(h_k)
 
@@ -669,9 +661,7 @@ class RBM:
             np.arange(score_c.shape[0])[:, None], top_items
         ] = 0  # set to zero the top_k elements
 
-        top_scores = score - score_c  # set to zeros all elements other then the top_k
-
-        return top_scores
+        return score - score_c
 
     def predict(self, x):
         """Returns the inferred ratings. This method is similar to recommend_k_items() with the
@@ -695,9 +685,7 @@ class RBM:
         """
 
         v_, _ = self.eval_out()  # evaluate the ratings and the associated probabilities
-        vp = self.sess.run(v_, feed_dict={self.vu: x})
-
-        return vp
+        return self.sess.run(v_, feed_dict={self.vu: x})
 
     def save(self, file_path="./rbm_model.ckpt"):
         """Save model parameters to `file_path`

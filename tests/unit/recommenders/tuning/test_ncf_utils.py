@@ -16,10 +16,7 @@ DATA_SIZE = 1  # setting to 1 so all IDs are unique
 def mock_model():
     def mock_predict(*args, is_list=False):
         """Mock model predict method"""
-        if is_list:
-            return [0] * DATA_SIZE
-        else:
-            return 0
+        return [0] * DATA_SIZE if is_list else 0
 
     mock_model = Mock()
     mock_model.predict.side_effect = mock_predict

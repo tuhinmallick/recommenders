@@ -83,7 +83,7 @@ class DKNTextIterator(BaseIterator):
                 for newsid in user_history:
                     click_news_index.append(self.news_word_index[newsid])
                     click_news_entity_index.append(self.news_entity_index[newsid])
-                for i in range(self.history_size - len(user_history)):
+                for _ in range(self.history_size - len(user_history)):
                     click_news_index.append(np.zeros(self.doc_size))
                     click_news_entity_index.append(np.zeros(self.doc_size))
                 self.user_history[userid] = (click_news_index, click_news_entity_index)
@@ -99,11 +99,8 @@ class DKNTextIterator(BaseIterator):
             `candidate_news_entity_index`, `click_news_entity_index`, `impression_id`.
 
         """
-        impression_id = 0
         words = line.strip().split(self.ID_spliter)
-        if len(words) == 2:
-            impression_id = words[1].strip()
-
+        impression_id = words[1].strip() if len(words) == 2 else 0
         cols = words[0].strip().split(self.col_spliter)
         label = float(cols[0])
 
@@ -229,13 +226,8 @@ class DKNTextIterator(BaseIterator):
             for line in rd:
                 newsid, word_index, entity_index = line.strip().split(" ")
                 newsid_list.append(newsid)
-                candidate_news_index = []
-                candidate_news_entity_index = []
-                for item in word_index.split(","):
-                    candidate_news_index.append(int(item))
-                for item in entity_index.split(","):
-                    candidate_news_entity_index.append(int(item))
-
+                candidate_news_index = [int(item) for item in word_index.split(",")]
+                candidate_news_entity_index = [int(item) for item in entity_index.split(",")]
                 candidate_news_index_batch.append(candidate_news_index)
                 candidate_news_entity_index_batch.append(candidate_news_entity_index)
 
@@ -288,8 +280,11 @@ class DKNTextIterator(BaseIterator):
         Returns:
             dict: A dictionary, containing multiple numpy arrays that are convenient for further operation.
         """
-        res = {}
-        res["labels"] = np.asarray([[label] for label in label_list], dtype=np.float32)
+        res = {
+            "labels": np.asarray(
+                [[label] for label in label_list], dtype=np.float32
+            )
+        }
         res["candidate_news_index_batch"] = np.asarray(
             candidate_news_index_batch, dtype=np.int64
         )
@@ -316,10 +311,11 @@ class DKNTextIterator(BaseIterator):
         Returns:
             dict: A dictionary, containing multiple numpy arrays that are convenient for further operation.
         """
-        res = {}
-        res["candidate_news_index_batch"] = np.asarray(
-            candidate_news_index_batch, dtype=np.int64
-        )
+        res = {
+            "candidate_news_index_batch": np.asarray(
+                candidate_news_index_batch, dtype=np.int64
+            )
+        }
         res["candidate_news_entity_index_batch"] = np.asarray(
             candidate_news_entity_index_batch, dtype=np.int64
         )
@@ -335,14 +331,14 @@ class DKNTextIterator(BaseIterator):
             dict: A dictionary that maps graph elements to numpy arrays.
 
         """
-        feed_dict = {
+        return {
             self.labels: data_dict["labels"].reshape([-1, 1]),
             self.candidate_news_index_batch: data_dict[
                 "candidate_news_index_batch"
             ].reshape([self.batch_size, self.doc_size]),
-            self.click_news_index_batch: data_dict["click_news_index_batch"].reshape(
-                [self.batch_size, self.history_size, self.doc_size]
-            ),
+            self.click_news_index_batch: data_dict[
+                "click_news_index_batch"
+            ].reshape([self.batch_size, self.history_size, self.doc_size]),
             self.candidate_news_entity_index_batch: data_dict[
                 "candidate_news_entity_index_batch"
             ].reshape([-1, self.doc_size]),
@@ -350,7 +346,6 @@ class DKNTextIterator(BaseIterator):
                 "click_news_entity_index_batch"
             ].reshape([-1, self.history_size, self.doc_size]),
         }
-        return feed_dict
 
     def gen_infer_feed_dict(self, data_dict):
         """Construct a dictionary that maps graph elements to values.
@@ -362,7 +357,7 @@ class DKNTextIterator(BaseIterator):
             dict: A dictionary that maps graph elements to numpy arrays.
 
         """
-        feed_dict = {
+        return {
             self.candidate_news_index_batch: data_dict[
                 "candidate_news_index_batch"
             ].reshape([self.batch_size, self.doc_size]),
@@ -370,4 +365,3 @@ class DKNTextIterator(BaseIterator):
                 "candidate_news_entity_index_batch"
             ].reshape([-1, self.doc_size]),
         }
-        return feed_dict

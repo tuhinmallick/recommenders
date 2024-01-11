@@ -53,7 +53,7 @@ if __name__ == "__main__":
     k = args.k
     threshold = args.threshold
 
-    logger.debug(f"Received parameters:")
+    logger.debug("Received parameters:")
     logger.debug(f"User:       {col_user}")
     logger.debug(f"Item:       {col_item}")
     logger.debug(f"Rating:     {col_rating}")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # Log to AzureML dashboard
     run = Run.get_context()
-    run.parent.log("Precision at {}".format(k), eval_precision)
+    run.parent.log(f"Precision at {k}", eval_precision)
 
     score_result = pd.DataFrame({"precision_at_k": [eval_precision]})
     save_data_frame_to_directory(

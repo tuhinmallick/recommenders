@@ -79,7 +79,7 @@ class WarpSampler(object):
     def __init__(self, User, usernum, itemnum, batch_size=64, maxlen=10, n_workers=1):
         self.result_queue = Queue(maxsize=n_workers * 10)
         self.processors = []
-        for i in range(n_workers):
+        for _ in range(n_workers):
             self.processors.append(
                 Process(
                     target=sample_function,

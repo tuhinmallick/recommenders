@@ -114,8 +114,7 @@ class NRMSModel(BaseModel):
         )
         user_present = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
 
-        model = keras.Model(his_input_title, user_present, name="user_encoder")
-        return model
+        return keras.Model(his_input_title, user_present, name="user_encoder")
 
     def _build_newsencoder(self, embedding_layer):
         """The main function to create news encoder of NRMS.
@@ -136,8 +135,7 @@ class NRMSModel(BaseModel):
         y = layers.Dropout(hparams.dropout)(y)
         pred_title = AttLayer2(hparams.attention_hidden_dim, seed=self.seed)(y)
 
-        model = keras.Model(sequences_input_title, pred_title, name="news_encoder")
-        return model
+        return keras.Model(sequences_input_title, pred_title, name="news_encoder")
 
     def _build_nrms(self):
         """The main function to create NRMS's logic. The core of NRMS

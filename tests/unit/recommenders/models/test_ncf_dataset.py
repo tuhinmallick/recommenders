@@ -47,14 +47,14 @@ def test_datafile_init(dataset_ncf_files_sorted):
 
     datafile_records = []
     with datafile as f:
-        for line in f:
-            datafile_records.append(
-                {
-                    DEFAULT_USER_COL: line[DEFAULT_USER_COL],
-                    DEFAULT_ITEM_COL: line[DEFAULT_ITEM_COL],
-                    DEFAULT_RATING_COL: line[DEFAULT_RATING_COL],
-                }
-            )
+        datafile_records.extend(
+            {
+                DEFAULT_USER_COL: line[DEFAULT_USER_COL],
+                DEFAULT_ITEM_COL: line[DEFAULT_ITEM_COL],
+                DEFAULT_RATING_COL: line[DEFAULT_RATING_COL],
+            }
+            for line in f
+        )
     datafile_df = pd.DataFrame.from_records(datafile_records)
     assert datafile_df.shape[0] == train.shape[0]
 

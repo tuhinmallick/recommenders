@@ -72,9 +72,7 @@ class NCF:
         model_options = ["gmf", "mlp", "neumf"]
         if self.model_type not in model_options:
             raise ValueError(
-                "Wrong model type, please select one of this list: {}".format(
-                    model_options
-                )
+                f"Wrong model type, please select one of this list: {model_options}"
             )
 
         # ncf layer input size

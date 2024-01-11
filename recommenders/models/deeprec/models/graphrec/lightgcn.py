@@ -59,9 +59,7 @@ class LightGCN(object):
         for metric in self.metrics:
             if metric not in metric_options:
                 raise ValueError(
-                    "Wrong metric(s), please select one of this list: {}".format(
-                        metric_options
-                    )
+                    f"Wrong metric(s), please select one of this list: {metric_options}"
                 )
 
         self.norm_adj = data.get_norm_adj_mat()
@@ -154,7 +152,7 @@ class LightGCN(object):
         )
         all_embeddings = [ego_embeddings]
 
-        for k in range(0, self.n_layers):
+        for _ in range(0, self.n_layers):
             ego_embeddings = tf.sparse.sparse_dense_matmul(A_hat, ego_embeddings)
             all_embeddings += [ego_embeddings]
 
@@ -214,7 +212,7 @@ class LightGCN(object):
             train_start = time.time()
             loss, mf_loss, emb_loss = 0.0, 0.0, 0.0
             n_batch = self.data.train.shape[0] // self.batch_size + 1
-            for idx in range(n_batch):
+            for _ in range(n_batch):
                 users, pos_items, neg_items = self.data.train_loader(self.batch_size)
                 _, batch_loss, batch_mf_loss, batch_emb_loss = self.sess.run(
                     [self.opt, self.loss, self.mf_loss, self.emb_loss],
@@ -235,7 +233,7 @@ class LightGCN(object):
             train_time = train_end - train_start
 
             if self.save_model and epoch % self.save_epoch == 0:
-                save_path_str = os.path.join(self.model_dir, "epoch_" + str(epoch))
+                save_path_str = os.path.join(self.model_dir, f"epoch_{str(epoch)}")
                 if not os.path.exists(save_path_str):
                     os.makedirs(save_path_str)
                 checkpoint_path = self.saver.save(  # noqa: F841

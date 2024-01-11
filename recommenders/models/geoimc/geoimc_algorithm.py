@@ -90,9 +90,7 @@ class IMCProblem(object):
             self.Y.indptr,
             residual_global,
         )
-        cost = 0.5 * np.sum((residual_global) ** 2) / self.nSamples + regularizer
-
-        return cost
+        return 0.5 * np.sum((residual_global) ** 2) / self.nSamples + regularizer
 
     def _egrad(self, params, residual_global):
         """Computes the euclidean gradient

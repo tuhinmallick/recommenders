@@ -93,8 +93,8 @@ def gen_paper_content(
                 words.extend(clip[1].split(","))
                 entities.extend(clip[2].split(","))
             if len(words) > doc_len:
-                words = words[0:doc_len]
-                entities = entities[0:doc_len]
+                words = words[:doc_len]
+                entities = entities[:doc_len]
             elif len(words) < doc_len:
                 for _ in range(doc_len - len(words)):
                     words.append("0")
@@ -256,11 +256,12 @@ def get_author_reference_list(author2paper_list, paper2reference_list, paper2dat
             for cited_paper in reference_list:
                 if cited_paper not in paper2date:
                     continue
-                if cited_paper not in cited_paper2cited_date:
+                if (
+                    cited_paper in cited_paper2cited_date
+                    and cited_paper2cited_date[cited_paper] < date
+                    or cited_paper not in cited_paper2cited_date
+                ):
                     cited_paper2cited_date[cited_paper] = date
-                else:
-                    if cited_paper2cited_date[cited_paper] < date:
-                        cited_paper2cited_date[cited_paper] = date
         if len(cited_paper2cited_date) <= 0:
             continue
         cited_paper_info = [
@@ -333,10 +334,8 @@ def sample_negative_and_write_to_file(
 
 def get_normalized_item_freq(item2cnt):
     keys = list(item2cnt.keys())
-    values = []
     total_value = sum(item2cnt.values())
-    for key in keys:
-        values.append(item2cnt[key] * 1.0 / total_value)
+    values = [item2cnt[key] * 1.0 / total_value for key in keys]
     values = np.asarray(values, dtype=np.float32)
     return keys, values
 
@@ -386,9 +385,9 @@ def gen_experiment_splits(
     print("expanding user behaviors...")
     _cnt = 0
     _t0 = time.time()
-    with open(file_Author2ReferencePapers, "r") as rd, open(
-        user_behavior_file, "w"
-    ) as wt:
+    with (open(file_Author2ReferencePapers, "r") as rd, open(
+            user_behavior_file, "w"
+        ) as wt):
         while True:
             line = rd.readline()
             if not line:
@@ -415,7 +414,7 @@ def gen_experiment_splits(
                 if i == 1:
                     user_behavior = act_items[i - 1]
                 else:
-                    user_behavior += "," + act_items[i - 1]
+                    user_behavior += f",{act_items[i - 1]}"
 
                 if act_items_len - 2 - _max_instance_per_user > i:
                     continue
@@ -428,15 +427,18 @@ def gen_experiment_splits(
                 user_tag = "{0}_{1}".format(words[0], i)
                 wt.write("{0} {1}\n".format(user_tag, user_behavior))
                 instance = "{0} {1} {2}%{3}".format(1, user_tag, act_items[i], words[0])
-                if act_items_len <= _min_test_seq_len:
-                    train_samples.append(instance)
+                if (
+                    act_items_len > _min_test_seq_len
+                    and i == act_items_len - 1
+                ):
+                    test_samples.append(instance)
+                elif (
+                    act_items_len > _min_test_seq_len
+                    and i == act_items_len - 2
+                ):
+                    valid_samples.append(instance)
                 else:
-                    if i == act_items_len - 1:
-                        test_samples.append(instance)
-                    elif i == act_items_len - 2:
-                        valid_samples.append(instance)
-                    else:
-                        train_samples.append(instance)
+                    train_samples.append(instance)
     print(
         "done. \nsample number in train / valid / test is {0} / {1} / {2}".format(
             len(train_samples), len(valid_samples), len(test_samples)
@@ -724,10 +726,10 @@ def load_np_from_txt(transE_vecfile, np_file, delimiter="\t"):
     data = []
     with open(transE_vecfile, "r") as rd:
         while True:
-            line = rd.readline()
-            if not line:
+            if line := rd.readline():
+                data.append([float(a) for a in line.strip().split(delimiter)])
+            else:
                 break
-            data.append([float(a) for a in line.strip().split(delimiter)])
     data = np.asarray(data, dtype=np.float32)
     with open(np_file, "wb") as f:
         np.save(f, data)
@@ -776,41 +778,33 @@ def gen_context_embedding(entity_file, context_file, kg_file, dim):
     # load embedding_vec
     entity_index = 0
     entity_dict = {}
-    fp_entity = open(entity_file, "r")
-    for line in fp_entity:
-        linesplit = line.strip().split("\t")[:dim]
-        linesplit = list(map(float, linesplit))
-        entity_dict[str(entity_index)] = linesplit
-        entity_index += 1
-    fp_entity.close()
+    with open(entity_file, "r") as fp_entity:
+        for line in fp_entity:
+            linesplit = line.strip().split("\t")[:dim]
+            linesplit = list(map(float, linesplit))
+            entity_dict[str(entity_index)] = linesplit
+            entity_index += 1
+    with open(kg_file, "r", encoding="utf-8") as fp_kg:
+        triple_num = fp_kg.readline()
+        triples = fp_kg.readlines()
+        kg_neighbor_dict = {}
+        for triple in triples:
+            linesplit = triple.strip().split(" ")
+            head = linesplit[0]
+            tail = linesplit[1]
+            if head not in kg_neighbor_dict:
+                kg_neighbor_dict[head] = set()
+            kg_neighbor_dict[head].add(tail)
 
-    # build neighbor for entity in entity_dict
-    fp_kg = open(kg_file, "r", encoding="utf-8")
-    triple_num = fp_kg.readline()
-    triples = fp_kg.readlines()
-    kg_neighbor_dict = {}
-    for triple in triples:
-        linesplit = triple.strip().split(" ")
-        head = linesplit[0]
-        tail = linesplit[1]
-        if head not in kg_neighbor_dict:
-            kg_neighbor_dict[head] = set()
-        kg_neighbor_dict[head].add(tail)
-
-        if tail not in kg_neighbor_dict:
-            kg_neighbor_dict[tail] = set()
-        kg_neighbor_dict[tail].add(head)
-    fp_kg.close()
-
+            if tail not in kg_neighbor_dict:
+                kg_neighbor_dict[tail] = set()
+            kg_neighbor_dict[tail].add(head)
     context_embeddings = np.zeros([entity_index, dim])
 
     for entity in entity_dict:
         if entity in kg_neighbor_dict:
             context_entity = kg_neighbor_dict[entity]
-            context_vecs = []
-            for c_entity in context_entity:
-                context_vecs.append(entity_dict[c_entity])
-
+            context_vecs = [entity_dict[c_entity] for c_entity in context_entity]
             context_vec = np.mean(np.asarray(context_vecs), axis=0)
             context_embeddings[int(entity)] = context_vec
 
@@ -854,7 +848,7 @@ def load_user_behaviors(user_behavior_file, train_triples, user_behavior_keys=No
             if not line:
                 break
             words = line.strip().split(" ")
-            if user_behavior_keys and not words[0] in user_behavior_keys:
+            if user_behavior_keys and words[0] not in user_behavior_keys:
                 continue
             userid = words[0].split("_")[0]
             items = words[1].split(",")

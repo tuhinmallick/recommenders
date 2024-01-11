@@ -22,7 +22,7 @@ except ImportError:
 
 @pytest.fixture()
 def model_parameters():
-    params = {
+    return {
         "itemnum": 85930,
         "usernum": 63114,
         "maxlen": 50,
@@ -33,7 +33,6 @@ def model_parameters():
         "l2_emb": 0.0,
         "num_neg_test": 100,
     }
-    return params
 
 
 def data_process_with_time(fname, pname, K=10, sep=" ", item_set=None, add_time=False):
@@ -86,11 +85,8 @@ def data_process_with_time(fname, pname, K=10, sep=" ", item_set=None, add_time=
         Users = Users - remove_users
 
     print(f"Total {len(Users)} users and {len(Items)} items")
-    item_count = 1
-    for item in Items:
+    for item_count, item in enumerate(Items, start=1):
         item_dict[item] = item_count
-        item_count += 1
-
     count_del = 0
     user_count = 1
     with open(pname, "w") as fw:
@@ -123,8 +119,8 @@ def data_process_with_time(fname, pname, K=10, sep=" ", item_set=None, add_time=
 def test_prepare_data():
     data_dir = os.path.join("tests", "resources", "deeprec", "sasrec")
     dataset = "reviews_Electronics_5"
-    reviews_name = dataset + ".json"
-    outfile = os.path.join(data_dir, dataset + ".txt")
+    reviews_name = f"{dataset}.json"
+    outfile = os.path.join(data_dir, f"{dataset}.txt")
 
     reviews_file = os.path.join(data_dir, reviews_name)
     download_and_extract(reviews_name, reviews_file)
@@ -148,8 +144,8 @@ def test_sampler():
     maxlen = 50
     data_dir = os.path.join("tests", "resources", "deeprec", "sasrec")
     dataset = "reviews_Electronics_5"
-    reviews_name = dataset + ".json"
-    outfile = os.path.join(data_dir, dataset + ".txt")
+    reviews_name = f"{dataset}.json"
+    outfile = os.path.join(data_dir, f"{dataset}.txt")
 
     reviews_file = os.path.join(data_dir, reviews_name)
     download_and_extract(reviews_name, reviews_file)
